@@ -27,20 +27,20 @@ app = typer.Typer(
 @app.command()
 def find(
     name: str | None = typer.Option(
-        None, "--name", help="Regex op jobnaam"
+        None, "--name", help="Regex on job name"
     ),
     tag: list[str] = typer.Option(
         [], "--tag", help="Tag selector (key=value)", show_default=False
     ),
     use_or: bool = typer.Option(
-        False, "--or", help="Gebruik OR i.p.v. AND"
+        False, "--or", help="Use OR instead of AND"
     ),
     profile: str | None = typer.Option(
-        None, "--profile", "-p", help="Databricks CLI profile"
+        None, "--profile", "-p", help="Specify a Databricks CLI profile"
     ),
 ):
     """
-    Zoek Databricks jobs met selectors.
+    Find Databricks jobs with selectors
     """
     try:
         selector = build_selector(name=name, tags=tag, use_or=use_or)
@@ -54,7 +54,7 @@ def find(
     jobs = select_jobs(adapter, selector)
 
     if not jobs:
-        print("[yellow]Geen jobs gevonden[/]")
+        print("[yellow]Unable to find jobs[/]")
         raise typer.Exit(0)
 
     for job in jobs:
@@ -65,32 +65,32 @@ def find(
 @app.command()
 def run(
     name: str | None = typer.Option(
-        None, "--name", help="Regex op jobnaam"
+        None, "--name", help="Regex on job name"
     ),
     tag: list[str] = typer.Option(
         [], "--tag", help="Tag selector (key=value)", show_default=False
     ),
     use_or: bool = typer.Option(
-        False, "--or", help="Gebruik OR i.p.v. AND"
+        False, "--or", help="Use OR instead of AND"
     ),
     profile: str | None = typer.Option(
-        None, "--profile", "-p", help="Databricks CLI profile"
+        None, "--profile", "-p", help="Specify a Databricks CLI profile"
     ),
     parallel: int = typer.Option(
-        5, "--parallel", "-n", help="Aantal jobs parallel starten"
+        5, "--parallel", "-n", help="Start jobs in parallel"
     ),
     confirm: bool = typer.Option(
-        True, "--confirm/--no-confirm", help="Bevestiging vragen"
+        True, "--confirm/--no-confirm", help="Ask for confirmation before starting jobs"
     ),
     watch: bool = typer.Option(
-        False, "--watch", "-w", help="Wacht tot runs klaar zijn"
+        False, "--watch", "-w", help="Wait for jobs to complete"
     ),
     dry_run: bool = typer.Option(
-        False, "--dry-run", help="Toon welke jobs zouden starten, maar start niets"
+        False, "--dry-run", help="Show which jobs would be started, but don't start them"
     ),
 ):
     """
-    Start Databricks jobs met selectors.
+    Start Databricks jobs with selectors.
     """
     try:
         selector = build_selector(name=name, tags=tag, use_or=use_or)
@@ -104,32 +104,32 @@ def run(
     jobs = select_jobs(adapter, selector)
 
     if not jobs:
-        print("[yellow]Geen jobs gevonden[/]")
+        print("[yellow]nable to find jobs[/]")
         raise typer.Exit(0)
 
     selected = tui_select_jobs(jobs)
 
     if not selected:
-        print("[yellow]Geen jobs geselecteerd[/]")
+        print("[yellow]No jobs selected[/]")
         raise typer.Exit(0)
 
-    print("[bold]Geselecteerde jobs:[/]")
+    print("[bold]Selected jobs:[/]")
     for job in selected:
         tags = ", ".join(f"{k}={v}" for k, v in (job.tags or {}).items())
         print(f"  [green]{job.id}[/]  {job.name}  [dim]{tags}[/]")
 
     if dry_run:
-        print("\n[yellow]Dry-run actief: geen jobs gestart[/]")
+        print("\n[yellow]Dry-run active: no jobs started[/]")
         raise typer.Exit(0)
 
-    if confirm and not Confirm.ask("Geselecteerde jobs starten?"):
+    if confirm and not Confirm.ask("Start selected jobs?"):
         raise typer.Exit(0)
 
     job_ids = [job.id for job in selected]
 
     runs = start_jobs_parallel(adapter, job_ids, parallel)
 
-    print("\n[green]Jobs gestart:[/]")
+    print("\n[green]Jobs started:[/]")
     for run in runs:
         print(f"  job_id={run.job_id}  run_id={run.run_id}")
 
