@@ -24,14 +24,15 @@ from db_ops.core.banner import LOGO
 if "--help" in sys.argv or "-h" in sys.argv:
     print(LOGO)
 
-app = typer.Typer(
-    help="dbops-cli – Databricks operations tooling",
-    no_args_is_help=True,
-)
+app = typer.Typer()
+# app = typer.Typer(
+#     # help="dbops-cli – Databricks operations tooling",
+#     no_args_is_help=True,
+# )
 
 @app.callback()
 def main(ctx: typer.Context):
-    # Voor `dbops` zonder subcommand
+    # For `dbops` without subcommand
     if ctx.invoked_subcommand is None and not ("--help" in sys.argv or "-h" in sys.argv):
         print(LOGO)
 
