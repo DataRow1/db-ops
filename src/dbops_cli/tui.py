@@ -1,14 +1,17 @@
 import questionary
-from databricks.sdk.service.jobs import BaseJob
+from db_ops.core.models import Job
 
-def select_jobs(jobs: list[BaseJob]) -> list[BaseJob]:
+
+def select_jobs(jobs: list[Job]) -> list[Job]:
+    choices = [
+        questionary.Choice(
+            title=f"{job.id} – {job.name}",
+            value=job,
+        )
+        for job in jobs
+    ]
+
     return questionary.checkbox(
-        "Selecteer jobs:",
-        choices=[
-            questionary.Choice(
-                title=f"{job.job_id} – {job.settings.name}",
-                value=job,
-            )
-            for job in jobs
-        ],
-    ).ask()
+        "Select jobs:",
+        choices=choices,
+    ).ask() or []

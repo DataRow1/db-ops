@@ -1,4 +1,5 @@
 import typer
+import sys
 from rich import print
 from rich.prompt import Confirm
 
@@ -17,12 +18,22 @@ from db_ops.core.selectors import (
     OrSelector,
 )
 from db_ops.core.selector_builder import build_selector
+from db_ops.core.banner import LOGO
+
+
+if "--help" in sys.argv or "-h" in sys.argv:
+    print(LOGO)
 
 app = typer.Typer(
     help="dbops-cli – Databricks operations tooling",
     no_args_is_help=True,
 )
 
+@app.callback()
+def main(ctx: typer.Context):
+    # Voor `dbops` zonder subcommand
+    if ctx.invoked_subcommand is None and not ("--help" in sys.argv or "-h" in sys.argv):
+        print(LOGO)
 
 @app.command()
 def find(
