@@ -1,0 +1,29 @@
+[project]
+name = "db-ops"
+version = "0.1.0"
+description = "Databricks ops tooling (core + CLI)"
+requires-python = ">=3.11"
+
+dependencies = [
+  "databricks-sdk>=0.30.0",
+]
+
+[project.optional-dependencies]
+cli = [
+  "typer>=0.12",
+  "rich>=13.7",
+  "questionary>=2.0",
+]
+
+[project.scripts]
+dbops = "dbops_cli.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+  "pytest",
+  "ruff",
+]
