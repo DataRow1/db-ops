@@ -68,5 +68,43 @@ class Out:
 
         console.print(t)
 
+    def runs_table(self, runs: Iterable[Any], title: str = "Runs") -> None:
+        """
+        Expects objects with .job_id and .run_id
+        (e.g. db_ops.core.models.JobRun)
+        """
+        t = Table(title=title, show_lines=False)
+        t.add_column("Job ID", style="ok", no_wrap=True)
+        t.add_column("Run ID", style="ok", no_wrap=True)
+
+        for r in runs:
+            t.add_row(str(r.job_id), str(r.run_id))
+
+        console.print(t)
+
+    def run_status_table(
+        self, results: Iterable[tuple[Any, Any]], title: str = "Run status"
+    ) -> None:
+        """
+        Expects tuples of (JobRun, RunStatus)
+        """
+        t = Table(title=title, show_lines=False)
+        t.add_column("Job ID", style="ok", no_wrap=True)
+        t.add_column("Run ID", style="ok", no_wrap=True)
+        t.add_column("Status")
+
+        for run, status in results:
+            status_value = status.value if hasattr(status, "value") else str(status)
+
+            style = "ok" if status_value == "SUCCESS" else "err"
+
+            t.add_row(
+                str(run.job_id),
+                str(run.run_id),
+                f"[{style}]{status_value}[/{style}]",
+            )
+
+        console.print(t)
+
 
 out = Out()

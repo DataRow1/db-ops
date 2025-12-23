@@ -1,5 +1,7 @@
 """Commands for managing Databricks Jobs."""
 
+from typing import Any
+
 import typer
 from rich.prompt import Confirm
 
@@ -103,20 +105,19 @@ def run(
     runs = start_jobs_parallel(appctx.adapter, [j.id for j in selected], parallel)
 
     out.success(f"Jobs started: {len(runs)} run(s)")
-    for r in runs:
-        out.info(f"job_id={r.job_id}  run_id={r.run_id}")
+    out.runs_table(runs, title="Started runs")
 
     if watch:
-        out.header("Run status")
+        results: list[tuple[Any, RunStatus]] = []
         failed = False
 
         for r in runs:
             status = wait_for_run(appctx.adapter, r.run_id)
-            if status == RunStatus.SUCCESS:
-                out.success(f"Run {r.run_id}: {status}")
-            else:
-                out.error(f"Run {r.run_id}: {status}")
+            results.append((r, status))
+            if status != RunStatus.SUCCESS:
                 failed = True
+
+        out.run_status_table(results, title="Run status")
 
         if failed:
             raise typer.Exit(2)
