@@ -12,7 +12,7 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
-app.add_typer(jobs_app, name="jobs", help="Jobs zoeken / starten / monitoren")
+app.add_typer(jobs_app, name="jobs", help="Search / start / monitor Databricks jobs.")
 
 if __name__ == "__main__":
     app()
