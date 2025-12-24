@@ -1,4 +1,4 @@
-"""Core domain models for Databricks operations.
+"""Core job domain models for Databricks operations.
 
 This module defines the fundamental data structures used throughout the
 application to represent Databricks jobs, job runs, and run states.

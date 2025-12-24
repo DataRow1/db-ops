@@ -13,7 +13,7 @@ scripts, and tests.
 import re
 from abc import ABC, abstractmethod
 
-from db_ops.core.models import Job
+from db_ops.core.job_models import Job
 
 
 class JobSelector(ABC):

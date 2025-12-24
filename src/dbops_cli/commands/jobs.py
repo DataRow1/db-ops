@@ -3,8 +3,8 @@
 import typer
 from rich.prompt import Confirm
 
+from db_ops.core.job_models import RunStatus
 from db_ops.core.jobs import select_jobs as core_select_jobs
-from db_ops.core.models import RunStatus
 from db_ops.core.runs import start_jobs_parallel
 from db_ops.core.selector_builder import build_selector
 from dbops_cli.common.context import AppContext, build_context

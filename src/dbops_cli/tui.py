@@ -2,7 +2,7 @@
 
 import questionary
 
-from db_ops.core.models import Job
+from db_ops.core.job_models import Job
 from dbops_cli.common.tui_style import QUESTIONARY_STYLE
 
 

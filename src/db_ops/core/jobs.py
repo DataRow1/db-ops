@@ -6,8 +6,8 @@ confirmation) and focuses purely on business logic that can be reused by
 different frontends (CLI, automation, tests).
 """
 
-from db_ops.core.adapters.databricks import DatabricksJobsAdapter
-from db_ops.core.models import Job
+from db_ops.core.adapters.databricksjobs import DatabricksJobsAdapter
+from db_ops.core.job_models import Job
 from db_ops.core.selectors import JobSelector
 
 

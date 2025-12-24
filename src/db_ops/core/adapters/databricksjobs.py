@@ -1,8 +1,7 @@
-import re
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.jobs import RunResultState
 
-from db_ops.core.models import Job, JobRun, RunStatus
+from db_ops.core.job_models import Job, JobRun, RunStatus
 
 
 class DatabricksJobsAdapter:
