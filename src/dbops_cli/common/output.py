@@ -32,6 +32,19 @@ console = Console(theme=_THEME)
 class Out:
     """Output formatter for CLI messages and tables."""
 
+    def _q_try(self, fn, *args, **kwargs):
+        """Call questionary prompts and drop unsupported kwargs on older versions."""
+        try:
+            return fn(*args, **kwargs)
+        except TypeError:
+            for k in ("pointer", "checked_icon", "unchecked_icon", "auto_enter"):
+                kwargs.pop(k, None)
+            return fn(*args, **kwargs)
+
+    def _q(self, message: str) -> str:
+        """Prefix Questionary prompts to be BRICK-OPS consistent."""
+        return f"[BRICK-OPS] {message}"
+
     def info(self, msg: str) -> None:
         """Print an info message."""
         console.print(f"[title]›[/] {msg}")
@@ -71,18 +84,40 @@ class Out:
         if not choices:
             return []
 
-        picked = questionary.checkbox(
-            message,
+        prompt = self._q_try(
+            questionary.checkbox,
+            self._q(message),
             choices=choices,
             style=QUESTIONARY_STYLE_SELECT,
             qmark="✦",
-            pointer="❯",
             instruction="Use ↑/↓, space, enter",
-            checked_icon="▣",  # selected
-            unchecked_icon="▢",  # not selected
-        ).ask()
-
+            pointer="❯",
+            checked_icon="▣",
+            unchecked_icon="▢",
+        )
+        picked = prompt.ask()
         return list(picked or [])
+
+    def select_one(self, message: str, choices: list[str]) -> str | None:
+        """
+        Prompt the user to select a single item from a list (radio list).
+
+        Returns:
+            The selected value, or None if cancelled.
+        """
+        if not choices:
+            return None
+
+        prompt = self._q_try(
+            questionary.select,
+            self._q(message),
+            choices=choices,
+            style=QUESTIONARY_STYLE_SELECT,
+            qmark="✦",
+            instruction="Use ↑/↓ then Enter",
+            pointer="❯",
+        )
+        return prompt.ask()
 
     def confirm(self, message: str, *, default: bool = False) -> bool:
         """
@@ -98,17 +133,20 @@ class Out:
         Returns:
             True if the user confirms, False otherwise.
         """
+        # Print instruction on its own line (Questionary renders `instruction=...` inline,
+        # which looks odd next to the final echoed answer).
+        console.print("[meta]Use y/n then Enter[/]")
 
-        return bool(
-            questionary.confirm(
-                message,
-                default=default,
-                style=QUESTIONARY_STYLE_CONFIRM,
-                qmark="✦",
-                pointer="❯",
-                instruction="Use ←/→ then Enter",
-            ).ask()
+        prompt = self._q_try(
+            questionary.confirm,
+            self._q(message),
+            default=default,
+            style=QUESTIONARY_STYLE_CONFIRM,
+            qmark="✦",
+            auto_enter=False,
+            pointer="❯",  # dropped automatically on older Questionary versions
         )
+        return bool(prompt.ask())
 
     def jobs_table(self, jobs: Iterable[Any], title: str = "Jobs") -> None:
         """

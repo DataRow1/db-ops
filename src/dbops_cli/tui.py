@@ -3,7 +3,7 @@
 import questionary
 
 from db_ops.core.job_models import Job
-from dbops_cli.common.tui_style import QUESTIONARY_STYLE
+from dbops_cli.common.tui_style import QUESTIONARY_STYLE_SELECT
 
 
 def select_jobs(jobs: list[Job]) -> list[Job]:
@@ -27,7 +27,7 @@ def select_jobs(jobs: list[Job]) -> list[Job]:
         questionary.checkbox(
             "Select jobs:",
             choices=choices,
-            style=QUESTIONARY_STYLE,
+            style=QUESTIONARY_STYLE_SELECT,
         ).ask()
         or []
     )
