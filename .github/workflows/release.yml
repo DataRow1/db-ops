@@ -4,14 +4,17 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: write
+
 jobs:
   build-macos:
     strategy:
       matrix:
         include:
-          - os: macos-14
+          - os: macos-latest
             arch: arm64
-          - os: macos-13
+          - os: macos-15-intel
             arch: amd64
     runs-on: ${{ matrix.os }}
 
