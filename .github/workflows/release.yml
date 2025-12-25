@@ -55,7 +55,8 @@ jobs:
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-assets
+          # Artifact names must be unique per workflow run (matrix jobs)
+          name: release-${{ matrix.asset }}
           path: ${{ matrix.asset }}
           if-no-files-found: error
 
@@ -69,8 +70,10 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: release-assets
+          # Download all matrix artifacts
+          pattern: release-*
           path: ./assets
+          merge-multiple: true
 
       - name: Install gh
         run: |
