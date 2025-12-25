@@ -1,22 +1,108 @@
 # dbops.spec
-# PyInstaller spec for dbops (BRICK-OPS)
+# Robust PyInstaller spec for dbops (BRICK-OPS)
+#
+# Why this exists:
+# - Typer/Click/Questionary use dynamic imports and package data.
+# - PyInstaller often misses these unless we explicitly collect submodules + data files.
 
-from PyInstaller.utils.hooks import collect_all
+from PyInstaller.utils.hooks import (
+    collect_all,
+    collect_data_files,
+    collect_submodules,
+)
+import site
 
-# collect_all returns: (datas, binaries, hiddenimports)
-q_datas, q_binaries, q_hidden = collect_all("questionary")
-ptk_datas, ptk_binaries, ptk_hidden = collect_all("prompt_toolkit")
+
+def _collect_all(pkg: str):
+    """Collect datas, binaries, and hiddenimports for a package.
+
+    NOTE: In the PyInstaller version you're using, collect_all returns a tuple:
+      (datas, binaries, hiddenimports)
+    """
+
+    datas, binaries, hidden = collect_all(pkg)
+    return list(datas), list(binaries), list(hidden)
+
+
+def _collect_pkg(pkg: str):
+    """Collect a package in the most robust way.
+
+    We combine:
+    - collect_all(pkg): binaries/datas/hiddenimports
+    - collect_submodules(pkg): to force-import all submodules (dynamic imports)
+    - collect_data_files(pkg): to include non-python assets used at runtime
+
+    Returns (datas, binaries, hiddenimports).
+    """
+
+    datas, binaries, hidden = _collect_all(pkg)
+
+    # Force all submodules to be bundled (prevents 'No module named ...')
+    hidden += collect_submodules(pkg)
+
+    # Include package data files (prompt_toolkit + questionary rely on these)
+    datas += collect_data_files(pkg, include_py_files=False)
+
+    # De-dup for stability
+    hidden = sorted(set(hidden))
+    datas = list(dict.fromkeys(datas))
+    binaries = list(dict.fromkeys(binaries))
+
+    return datas, binaries, hidden
+
+
+# Core CLI deps
+TY_DATAS, TY_BINARIES, TY_HIDDEN = _collect_pkg("typer")
+CL_DATAS, CL_BINARIES, CL_HIDDEN = _collect_pkg("click")
+RI_DATAS, RI_BINARIES, RI_HIDDEN = _collect_pkg("rich")
+
+# TUI deps
+QA_DATAS, QA_BINARIES, QA_HIDDEN = _collect_pkg("questionary")
+PT_DATAS, PT_BINARIES, PT_HIDDEN = _collect_pkg("prompt_toolkit")
+
+# Databricks SDK (namespace package structure can be tricky)
+DB_DATAS, DB_BINARIES, DB_HIDDEN = _collect_pkg("databricks")
+
+
+datas = []
+binaries = []
+hiddenimports = []
+
+for d, b, h in [
+    (TY_DATAS, TY_BINARIES, TY_HIDDEN),
+    (CL_DATAS, CL_BINARIES, CL_HIDDEN),
+    (RI_DATAS, RI_BINARIES, RI_HIDDEN),
+    (QA_DATAS, QA_BINARIES, QA_HIDDEN),
+    (PT_DATAS, PT_BINARIES, PT_HIDDEN),
+    (DB_DATAS, DB_BINARIES, DB_HIDDEN),
+]:
+    datas += d
+    binaries += b
+    hiddenimports += h
+
+# Extra explicit imports that are commonly missed with Typer
+hiddenimports += [
+    "typer.main",
+    "typer.core",
+    "typer.params",
+    "typer.rich_utils",
+    "click.termui",
+    "click.decorators",
+]
+
+hiddenimports = sorted(set(hiddenimports))
+
 
 a = Analysis(
     ["src/dbops_cli/__main__.py"],
-    pathex=["."],
-    binaries=[] + q_binaries + ptk_binaries,
-    datas=[] + q_datas + ptk_datas,
-    hiddenimports=[] + q_hidden + ptk_hidden,
+    pathex=[".", *site.getsitepackages(), site.getusersitepackages()],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     runtime_hooks=[],
     excludes=[
-        # prompt_toolkit has optional SSH support that depends on asyncssh.
+        # Optional SSH bits in prompt_toolkit that pull in asyncssh.
         "asyncssh",
         "prompt_toolkit.contrib.ssh",
     ],
@@ -28,14 +114,21 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
     [],
+    exclude_binaries=True,
     name="dbops",
     debug=False,
-    bootloader_ignore_signals=False,
     strip=False,
     upx=False,
     console=True,
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=False,
+    name="dbops",
 )

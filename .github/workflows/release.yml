@@ -1,48 +1,127 @@
-name: build-release
+name: release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
 
 permissions:
   contents: write
 
 jobs:
-  build-macos:
+  build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: macos-latest
-            arch: arm64
+            asset: dbops-darwin-arm64.tar.gz
           - os: macos-15-intel
-            arch: amd64
+            asset: dbops-darwin-amd64.tar.gz
+          - os: ubuntu-latest
+            asset: dbops-linux-amd64.tar.gz
+
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install uv
-        run: |
-          python -m pip install -U pip
-          pip install uv
+        uses: astral-sh/setup-uv@v3
 
       - name: Install deps
         run: |
-          uv venv
+          uv venv --python 3.11
+          . .venv/bin/activate
           uv pip install -e ".[cli]"
-          uv pip install pyinstaller
+          uv pip install "pyinstaller==6.17.0"
 
-      - name: Build binary
+      - name: Build (onedir)
         run: |
-          uv run pyinstaller --clean dbops.spec
-          mv dist/dbops dist/dbops-darwin-${{ matrix.arch }}
+          . .venv/bin/activate
+          rm -rf build dist
+          pyinstaller --noconfirm --clean dbops.spec
+          test -d dist/dbops
 
-      - name: Upload to GitHub Release
+      - name: Package asset
+        run: |
+          tar -C dist -czf "${{ matrix.asset }}" dbops
+
+      - name: Upload release asset
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/dbops-darwin-${{ matrix.arch }}
+          files: ${{ matrix.asset }}
+
+  update-homebrew-tap:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Compute tag/version
+        id: ver
+        run: |
+          echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout tap repo
+        uses: actions/checkout@v4
+        with:
+          repository: DataRow1/homebrew-brick-ops
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          path: tap
+
+      - name: Download assets + compute sha256
+        id: sha
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.ver.outputs.tag }}"
+          BASE="https://github.com/DataRow1/db-ops/releases/download/${TAG}"
+
+          curl -fsSL "${BASE}/dbops-darwin-arm64.tar.gz" -o arm64.tar.gz
+          curl -fsSL "${BASE}/dbops-darwin-amd64.tar.gz" -o amd64.tar.gz
+
+          echo "arm64=$(sha256sum arm64.tar.gz | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "amd64=$(sha256sum amd64.tar.gz | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - name: Update formula
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.ver.outputs.version }}"
+          TAG="${{ steps.ver.outputs.tag }}"
+          ARM_SHA="${{ steps.sha.outputs.arm64 }}"
+          AMD_SHA="${{ steps.sha.outputs.amd64 }}"
+
+          F="tap/Formula/brick-ops.rb"
+
+          # version "x.y.z"
+          perl -0777 -i -pe "s/version\\s+\\\"[0-9.]+\\\"/version \\\"${VERSION}\\\"/g" "$F"
+
+          # URLs (no v)
+          perl -0777 -i -pe "s|releases/download/[0-9.]+/dbops-darwin-arm64\\.tar\\.gz|releases/download/${TAG}/dbops-darwin-arm64.tar.gz|g" "$F"
+          perl -0777 -i -pe "s|releases/download/[0-9.]+/dbops-darwin-amd64\\.tar\\.gz|releases/download/${TAG}/dbops-darwin-amd64.tar.gz|g" "$F"
+
+          # sha256 next to each URL
+          perl -0777 -i -pe "s|(dbops-darwin-arm64\\.tar\\.gz\\\"\\s*\\n\\s*sha256\\s+\\\")[a-f0-9]{64}(\\\")|\\1${ARM_SHA}\\2|g" "$F"
+          perl -0777 -i -pe "s|(dbops-darwin-amd64\\.tar\\.gz\\\"\\s*\\n\\s*sha256\\s+\\\")[a-f0-9]{64}(\\\")|\\1${AMD_SHA}\\2|g" "$F"
+
+      - name: Create PR in tap repo
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          path: tap
+          branch: "update/brick-ops-${{ steps.ver.outputs.version }}"
+          commit-message: "brick-ops ${{ steps.ver.outputs.version }}"
+          title: "brick-ops ${{ steps.ver.outputs.version }}"
+          body: |
+            Automated update for brick-ops ${{ steps.ver.outputs.version }}.
+            - updated version
+            - updated URLs
+            - updated sha256
+          delete-branch: true
