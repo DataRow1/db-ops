@@ -1,6 +1,6 @@
 [project]
 name = "db-ops"
-version = "0.1.4"
+version = "0.1.5"
 description = "Databricks operations commandline tool"
 requires-python = ">=3.11"
 
