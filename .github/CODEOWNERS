@@ -1,0 +1,19 @@
+# Default: alles in de repo
+
+- @DataRow1
+
+# CLI / UX
+
+/src/dbops_cli/ @DataRow1
+
+# Core library
+
+/src/db_ops/ @DataRow1
+
+# GitHub Actions + tooling
+
+/.github/ @DataRow1
+
+# Homebrew tap updater scripts (als je die in repo hebt)
+
+scripts/ @DataRow1
