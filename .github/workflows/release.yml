@@ -86,14 +86,15 @@ jobs:
         run: |
           set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
+          REPO="${GITHUB_REPOSITORY}"
 
           # Create release if it doesn't exist yet
-          if ! gh release view "$TAG" >/dev/null 2>&1; then
-            gh release create "$TAG" --title "$TAG" --notes ""
+          if ! gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+            gh release create "$TAG" --repo "$REPO" --title "$TAG" --notes ""
           fi
 
           # Upload / overwrite assets
-          gh release upload "$TAG" ./assets/* --clobber
+          gh release upload "$TAG" --repo "$REPO" ./assets/* --clobber
 
   update-homebrew-tap:
     needs: publish-release
