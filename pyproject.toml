@@ -17,8 +17,8 @@ dbops = "dbops_cli.cli:app"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv]
-dev-dependencies = ["pytest", "ruff"]
+[dependency-groups]
+dev = ["ruff", "pytest"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/dbops_cli", "src/db_ops"]
