@@ -28,10 +28,6 @@ It is designed for data engineers and platform teams who want safe, fast, and co
 - Full `--dry-run` support
 - Result tables with success / failure per object
 
-### CLI & UX
-
-- Authentication via Databricks CLI + Databricks SDK
-
 ---
 
 ## Installation
@@ -45,11 +41,11 @@ It is designed for data engineers and platform teams who want safe, fast, and co
 ### Using `uv` (recommended)
 
 ```bash
-git clone https://github.com/<your-org>/brick-ops.git
-cd brick-ops
+git clone https://github.com/datarow1/db-ops.git
+cd db-ops
 uv venv
 source .venv/bin/activate
-uv pip install -e ".[cli]"
+uv pip install .
 ```
 
 Verify:
@@ -59,6 +55,13 @@ dbops --help
 ```
 
 ---
+
+### Using homebrew (slow due to no signing)
+
+```bash
+brew tap datarow1/brick-ops
+brew install brick-ops
+```
 
 ## Authentication
 
