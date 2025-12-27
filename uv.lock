@@ -143,6 +143,7 @@ version = "0.1.6"
 source = { editable = "." }
 dependencies = [
     { name = "databricks-sdk" },
+    { name = "questionary" },
     { name = "typer" },
 ]
 
@@ -166,6 +167,7 @@ dev = [
 requires-dist = [
     { name = "databricks-sdk", specifier = ">=0.30.0" },
     { name = "pyinstaller", marker = "extra == 'dev'", specifier = ">=6.0" },
+    { name = "questionary", specifier = ">=2.1.1" },
     { name = "questionary", marker = "extra == 'cli'", specifier = ">=2.0" },
     { name = "rich", marker = "extra == 'cli'", specifier = ">=13.7" },
     { name = "typer", specifier = ">=0.20.1" },
