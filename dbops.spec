@@ -10,7 +10,51 @@ from PyInstaller.utils.hooks import (
     collect_data_files,
     collect_submodules,
 )
-import site
+import os
+import sys
+import sysconfig
+
+def _default_pathex() -> list[str]:
+    """Compute a cross-platform pathex.
+
+    Why:
+    - Homebrew/Linux builds often run in isolated environments where `site.getsitepackages()`
+      may be empty/unavailable or point at locations you don't want.
+    - PyInstaller only needs to find *your* sources and the environment's site-packages.
+    """
+
+    paths: list[str] = []
+
+    # Project roots
+    paths.append(os.path.abspath("."))
+    paths.append(os.path.abspath("src"))
+
+    # Current interpreter's site-packages (works on Linux/macOS/Windows)
+    try:
+        purelib = sysconfig.get_paths().get("purelib")
+        platlib = sysconfig.get_paths().get("platlib")
+        for p in (purelib, platlib):
+            if p:
+                paths.append(os.path.abspath(p))
+    except Exception:
+        pass
+
+    # If a venv is active, also include its site-packages explicitly
+    venv = os.environ.get("VIRTUAL_ENV")
+    if venv:
+        candidates = [
+            os.path.join(venv, "lib", f"python{sys.version_info.major}.{sys.version_info.minor}", "site-packages"),
+            os.path.join(venv, "Lib", "site-packages"),
+        ]
+        for c in candidates:
+            if os.path.isdir(c):
+                paths.append(os.path.abspath(c))
+
+    # De-dup while preserving order
+    return list(dict.fromkeys(paths))
+
+
+PATHEX = _default_pathex()
 
 
 def _collect_all(pkg: str):
@@ -95,7 +139,7 @@ hiddenimports = sorted(set(hiddenimports))
 
 a = Analysis(
     ["src/dbops_cli/__main__.py"],
-    pathex=[".", *site.getsitepackages(), site.getusersitepackages()],
+    pathex=PATHEX,
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
