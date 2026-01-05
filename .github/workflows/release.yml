@@ -144,10 +144,8 @@ jobs:
 
           # version "x.y.z"
           perl -0777 -i -pe "s/version\\s+\\\"[0-9.]+\\\"/version \\\"${VERSION}\\\"/g" "$F"
-
-          perl -0777 -i -pe "s#(dbops-darwin-arm64\\.tar\\.gz\\\"\\s*\\n\\s*sha256\\s+\\\")[^\\\"]+(\\\")#\\1${ARM_SHA}\\2#g" "$F"
-          perl -0777 -i -pe "s#(dbops-darwin-amd64\\.tar\\.gz\\\"\\s*\\n\\s*sha256\\s+\\\")[^\\\"]+(\\\")#\\1${AMD_SHA}\\2#g" "$F"
-          perl -0777 -i -pe "s#(dbops-linux-amd64\\.tar\\.gz\\\"\\s*\\n\\s*sha256\\s+\\\")[^\\\"]+(\\\")#\\1${LINUX_AMD_SHA}\\2#g" "$F"
+          perl -0777 -i -pe "s#\\bon_macos\\s+do\\b[\\s\\S]*?^\\s{2}end\\s*$#on_macos do\n    if Hardware::CPU.arm?\n      url \\\"https://github.com/DataRow1/brick-ops/releases/download/#\\{version\\}/dbops-darwin-arm64.tar.gz\\\"\n      sha256 \\\"__DARWIN_ARM64_SHA256__\\\"\n    else\n      url \\\"https://github.com/DataRow1/brick-ops/releases/download/#\\{version\\}/dbops-darwin-amd64.tar.gz\\\"\n      sha256 \\\"__DARWIN_AMD64_SHA256__\\\"\n    end\n  end#gms" "$F"
+          perl -0777 -i -pe "s#\\bon_linux\\s+do\\b[\\s\\S]*?^\\s{2}end\\s*$#on_linux do\n    url \\\"https://github.com/DataRow1/brick-ops/releases/download/#\\{version\\}/dbops-linux-amd64.tar.gz\\\"\n    sha256 \\\"__LINUX_AMD64_SHA256__\\\"\n  end#gms" "$F"
 
       - name: Create PR in tap repo
         uses: peter-evans/create-pull-request@v6
