@@ -1,4 +1,4 @@
-name: release
+name: Homebrew Release
 
 on:
   push:
