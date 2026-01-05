@@ -145,9 +145,9 @@ jobs:
           # version "x.y.z"
           perl -0777 -i -pe "s/version\\s+\\\"[0-9.]+\\\"/version \\\"${VERSION}\\\"/g" "$F"
 
-          perl -0777 -i -pe "s|(dbops-darwin-arm64\\.tar\\.gz\\\"\\s*\\n\\s*sha256\\s+\\\")([a-f0-9]{64}|__DARWIN_ARM64_SHA256__)(\\\")|\\1${ARM_SHA}\\3|g" "$F"
-          perl -0777 -i -pe "s|(dbops-darwin-amd64\\.tar\\.gz\\\"\\s*\\n\\s*sha256\\s+\\\")([a-f0-9]{64}|__DARWIN_AMD64_SHA256__)(\\\")|\\1${AMD_SHA}\\3|g" "$F"
-          perl -0777 -i -pe "s|(dbops-linux-amd64\\.tar\\.gz\\\"\\s*\\n\\s*sha256\\s+\\\")([a-f0-9]{64}|__LINUX_AMD64_SHA256__)(\\\")|\\1${LINUX_AMD_SHA}\\3|g" "$F"
+          perl -0777 -i -pe "s#(dbops-darwin-arm64\\.tar\\.gz\\\"\\s*\\n\\s*sha256\\s+\\\")([a-f0-9]{64}|__DARWIN_ARM64_SHA256__)(\\\")#\\1${ARM_SHA}\\3#g" "$F"
+          perl -0777 -i -pe "s#(dbops-darwin-amd64\\.tar\\.gz\\\"\\s*\\n\\s*sha256\\s+\\\")([a-f0-9]{64}|__DARWIN_AMD64_SHA256__)(\\\")#\\1${AMD_SHA}\\3#g" "$F"
+          perl -0777 -i -pe "s#(dbops-linux-amd64\\.tar\\.gz\\\"\\s*\\n\\s*sha256\\s+\\\")([a-f0-9]{64}|__LINUX_AMD64_SHA256__)(\\\")#\\1${LINUX_AMD_SHA}\\3#g" "$F"
 
       - name: Create PR in tap repo
         uses: peter-evans/create-pull-request@v6
