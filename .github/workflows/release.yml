@@ -50,6 +50,7 @@ jobs:
 
       - name: Package asset
         run: |
+          rm -rf package
           mkdir -p package
           cp -R dist/dbops package/dbops
           tar -C package -czf "${{ matrix.asset }}" dbops
