@@ -50,7 +50,9 @@ jobs:
 
       - name: Package asset
         run: |
-          tar -C dist -czf "${{ matrix.asset }}" dbops
+          mkdir -p package
+          cp -R dist/dbops package/dbops
+          tar -C package -czf "${{ matrix.asset }}" dbops
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
