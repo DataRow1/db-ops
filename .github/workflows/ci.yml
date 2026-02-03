@@ -11,6 +11,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -26,6 +28,12 @@ jobs:
           . .venv/bin/activate
           uv pip install -e ".[cli]" ruff pytest
 
+      - name: Commit message lint (PR only)
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          . .venv/bin/activate
+          python scripts/check_conventional_commits.py
+
       - name: Ruff
         run: |
           . .venv/bin/activate
@@ -35,3 +43,8 @@ jobs:
         run: |
           . .venv/bin/activate
           pytest
+
+      - name: Smoke test CLI
+        run: |
+          . .venv/bin/activate
+          python -m dbops --help

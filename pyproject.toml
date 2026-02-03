@@ -36,7 +36,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = ["ruff", "pytest"]
+dev = ["ruff", "pytest", "pre-commit"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/dbops"]
+
+[tool.semantic_release]
+branch = "main"
+tag_format = "{version}"
+commit_parser = "angular"
+version_toml = ["pyproject.toml:project.version"]
+
+[tool.semantic_release.changelog]
+changelog_file = "CHANGELOG.md"

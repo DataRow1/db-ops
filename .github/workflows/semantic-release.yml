@@ -1,48 +1,39 @@
-# This workflow does the following things:
-# 1. Analyze commit messages and determine the next version number based on conventional commits
-# 2. Generate a CHANGELOG.md file with all changes since the last release
-# 3. Update the version in pyproject.toml
-# 4. Create a new git tag with the version
-# 5. Create a GitHub release with the changelog
-# 6. Push all changes back to the repository
-
-name: Semantic Release
+name: semantic-release
 
 on:
   push:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
-      id-token: write
 
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          ref: "main" # Ensure you're on the main branch
-          fetch-depth: 0 # Fetch all history and tags
+          fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
         with:
-          node-version: 20
+          python-version: "3.11"
 
-      - name: Install Semantic Release
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install semantic-release
         run: |
-          npm install --no-save \
-            semantic-release \
-            @semantic-release/changelog \
-            @semantic-release/exec \
-            @semantic-release/git
+          uv venv --python 3.11
+          . .venv/bin/activate
+          uv pip install python-semantic-release
 
-      - name: Run Semantic Release
-        run: npx semantic-release
+      - name: Semantic release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          . .venv/bin/activate
+          semantic-release publish

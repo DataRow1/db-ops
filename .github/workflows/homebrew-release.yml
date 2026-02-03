@@ -9,7 +9,43 @@ permissions:
   contents: write
 
 jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install deps
+        run: |
+          uv venv --python 3.11
+          . .venv/bin/activate
+          uv pip install -e ".[cli]" ruff pytest
+
+      - name: Ruff
+        run: |
+          . .venv/bin/activate
+          ruff check .
+
+      - name: Pytest
+        run: |
+          . .venv/bin/activate
+          pytest
+
+      - name: Smoke test CLI
+        run: |
+          . .venv/bin/activate
+          python -m dbops --help
+
   build:
+    needs: lint-test
     strategy:
       fail-fast: false
       matrix:

@@ -38,6 +38,16 @@ It is designed for data engineers and platform teams who want safe, fast, and co
 - Databricks CLI
 - Access to a Databricks workspace
 
+### Using uv (from source)
+
+```bash
+git clone https://github.com/datarow1/db-ops.git
+cd db-ops
+uv venv
+source .venv/bin/activate
+uv pip install .
+```
+
 ### Using homebrew (recommended)
 
 ```bash
@@ -250,15 +260,42 @@ db-ops/
 ## Development
 
 ```bash
+uv venv
+source .venv/bin/activate
+uv pip install -e .
+uv pip install ruff pytest pre-commit
+```
+
+```bash
 ruff check .
 ruff format .
 ```
 
-Run tests (if present):
+Run tests and a quick smoke check:
 
 ```bash
 pytest
+python -m dbops --help
 ```
+
+Install commit message linting (Conventional Commits):
+
+```bash
+pre-commit install --hook-type commit-msg
+```
+
+Before merging checklist:
+
+- `ruff check .`
+- `pytest`
+- `python -m dbops --help`
+- Conventional Commit message on your commits (or use the pre-commit hook)
+
+Make shortcuts:
+
+- `make setup`
+- `make check`
+- `make precommit`
 
 ---
 
