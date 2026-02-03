@@ -10,9 +10,7 @@ import json
 import os
 import re
 import subprocess
-import sys
 from pathlib import Path
-
 
 CONVENTIONAL_RE = re.compile(
     r"^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([\w\-./]+\))?(!)?: .+"

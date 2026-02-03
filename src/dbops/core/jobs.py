@@ -68,11 +68,9 @@ class RunStatus(str, Enum):
 
 
 class JobsAdapter(Protocol):
-    def find_jobs_by_regex(self, pattern: str) -> list[Job]:
-        ...
+    def find_jobs_by_regex(self, pattern: str) -> list[Job]: ...
 
-    def find_all_jobs(self) -> list[Job]:
-        ...
+    def find_all_jobs(self) -> list[Job]: ...
 
 
 def find_jobs(adapter: JobsAdapter, pattern: str) -> list[Job]:
