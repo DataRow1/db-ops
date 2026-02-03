@@ -2,16 +2,34 @@
 name = "db-ops"
 version = "0.1.14"
 description = "Databricks operations commandline tool"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "DataRow1" }]
 requires-python = ">=3.11"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+]
 
-dependencies = ["databricks-sdk>=0.30.0", "questionary>=2.1.1", "typer>=0.20.1"]
+dependencies = [
+    "databricks-sdk>=0.30.0",
+    "questionary>=2.1.1",
+    "rich>=13.7",
+    "typer>=0.20.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/DataRow1/db-ops"
+Repository = "https://github.com/DataRow1/db-ops"
 
 [project.optional-dependencies]
-cli = ["typer>=0.12", "rich>=13.7", "questionary>=2.0"]
+cli = ["typer>=0.20.1", "rich>=13.7", "questionary>=2.1.1"]
 dev = ["pyinstaller>=6.0"]
 
 [project.scripts]
-dbops = "dbops_cli.cli:app"
+dbops = "dbops.cli:app"
 
 [build-system]
 requires = ["hatchling"]
@@ -21,4 +39,4 @@ build-backend = "hatchling.build"
 dev = ["ruff", "pytest"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dbops_cli", "src/db_ops"]
+packages = ["src/dbops"]

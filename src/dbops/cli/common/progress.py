@@ -15,8 +15,8 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 
-from db_ops.core.adapters.databricksjobs import DatabricksJobsAdapter
-from db_ops.core.job_models import JobRun, RunStatus
+from dbops.core.adapters.databricksjobs import DatabricksJobsAdapter
+from dbops.core.jobs import JobRun, RunStatus
 
 console = Console()
 

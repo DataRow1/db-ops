@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dbops_cli.cli import app
+from dbops.cli import app
 
 if __name__ == "__main__":
     app()

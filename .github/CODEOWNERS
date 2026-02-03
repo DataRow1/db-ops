@@ -4,11 +4,11 @@
 
 # CLI / UX
 
-/src/dbops_cli/ @DataRow1
+/src/dbops/cli/ @DataRow1
 
 # Core library
 
-/src/db_ops/ @DataRow1
+/src/dbops/core/ @DataRow1
 
 # GitHub Actions + tooling
 

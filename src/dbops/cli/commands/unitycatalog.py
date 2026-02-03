@@ -5,9 +5,9 @@ import re
 import typer
 from databricks.sdk.errors import NotFound, PermissionDenied
 
-from db_ops.core.adapters.unitycatalog import UnityCatalogAdapter
-from db_ops.core.auth import get_client
-from db_ops.core.catalog import (
+from dbops.core.adapters.unitycatalog import UnityCatalogAdapter
+from dbops.core.auth import get_client
+from dbops.core.catalog import (
     delete_schema_with_tables,
     delete_tables,
     drop_empty_schemas,
@@ -15,9 +15,9 @@ from db_ops.core.catalog import (
     parse_schema_full_name,
     set_tables_owner,
 )
-from dbops_cli.common.exits import exit_from_exc
-from dbops_cli.common.options import ProfileOpt
-from dbops_cli.common.output import out
+from dbops.cli.common.exits import exit_from_exc
+from dbops.cli.common.options import ProfileOpt
+from dbops.cli.common.output import out
 
 uc_app = typer.Typer(help="Unity Catalog operations.", no_args_is_help=True)
 

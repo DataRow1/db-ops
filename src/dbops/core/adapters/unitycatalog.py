@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from databricks.sdk import WorkspaceClient
 
-from db_ops.core.uc_models import UCCatalog, UCSchema, UCTable
+from dbops.core.uc_models import UCCatalog, UCSchema, UCTable
 
 
 class UnityCatalogAdapter:

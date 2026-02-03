@@ -2,8 +2,8 @@
 
 import questionary
 
-from db_ops.core.job_models import Job
-from dbops_cli.common.tui_style import QUESTIONARY_STYLE_SELECT
+from dbops.core.jobs import Job
+from dbops.cli.common.tui_style import QUESTIONARY_STYLE_SELECT
 
 
 def select_jobs(jobs: list[Job]) -> list[Job]:

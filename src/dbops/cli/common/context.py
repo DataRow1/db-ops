@@ -4,8 +4,8 @@ from dataclasses import dataclass
 
 from databricks.sdk import WorkspaceClient
 
-from db_ops.core.adapters.databricksjobs import DatabricksJobsAdapter
-from db_ops.core.auth import get_client
+from dbops.core.adapters.databricksjobs import DatabricksJobsAdapter
+from dbops.core.auth import get_client
 
 
 @dataclass

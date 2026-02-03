@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.theme import Theme
 
-from dbops_cli.common.tui_style import (
+from dbops.cli.common.tui_style import (
     QUESTIONARY_STYLE_CONFIRM,
     QUESTIONARY_STYLE_SELECT,
 )
@@ -150,7 +150,7 @@ class Out:
 
     def jobs_table(self, jobs: Iterable[Any], title: str = "Jobs") -> None:
         """
-        Expects objects with .id .name .tags (like db_ops.core.models.Job)
+        Expects objects with .id .name .tags (like dbops.core.models.Job)
         """
         t = Table(title=title, show_lines=False)
         t.add_column("Job ID", style="ok", no_wrap=True)
@@ -168,7 +168,7 @@ class Out:
     def runs_table(self, runs: Iterable[Any], title: str = "Runs") -> None:
         """
         Expects objects with .job_id and .run_id
-        (e.g. db_ops.core.models.JobRun)
+        (e.g. dbops.core.models.JobRun)
         """
         t = Table(title=title, show_lines=False)
         t.add_column("Job ID", style="ok", no_wrap=True)

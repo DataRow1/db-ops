@@ -10,10 +10,14 @@ reusable across different frontends such as CLI commands, automation
 scripts, and tests.
 """
 
+from __future__ import annotations
+
 import re
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
-from db_ops.core.job_models import Job
+if TYPE_CHECKING:
+    from dbops.core.jobs import Job
 
 
 class JobSelector(ABC):
@@ -80,6 +84,8 @@ class TagSelector(JobSelector):
         """
         Check whether the job contains the specified tag with the expected value.
         """
+        if not job.tags:
+            return False
         return job.tags.get(self.key) == self.value
 
 

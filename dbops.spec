@@ -138,7 +138,7 @@ hiddenimports = sorted(set(hiddenimports))
 
 
 a = Analysis(
-    ["src/dbops_cli/__main__.py"],
+    ["src/dbops/__main__.py"],
     pathex=PATHEX,
     binaries=binaries,
     datas=datas,

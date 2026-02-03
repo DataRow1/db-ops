@@ -9,7 +9,7 @@ abstraction.
 
 from typing import Iterable
 
-from db_ops.core.selectors import (
+from dbops.core.selectors import (
     AndSelector,
     JobSelector,
     NameRegexSelector,

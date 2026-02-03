@@ -38,24 +38,14 @@ It is designed for data engineers and platform teams who want safe, fast, and co
 - Databricks CLI
 - Access to a Databricks workspace
 
-### Using `uv` (recommended)
-
-```bash
-git clone https://github.com/datarow1/db-ops.git
-cd db-ops
-uv venv
-source .venv/bin/activate
-uv pip install .
-```
-
-### Using homebrew (slow due to no signing)
+### Using homebrew (recommended)
 
 ```bash
 brew tap datarow1/brick-ops
 brew install brick-ops
 ```
 
-Verify:
+Verify (after authentication - see below):
 
 ```bash
 dbops --help
@@ -215,18 +205,19 @@ All prompts are styled consistently with the BRICK-OPS theme.
 ```text
 db-ops/
 ├── src/
-│   ├── db_ops/              # Core logic
-│   │   ├── adapters/
-│   │   ├── selectors/
-│   │   ├── jobs.py
-│   │   └── uc_models.py
-│   └── dbops_cli/           # CLI
-│       ├── commands/
-│       ├── common/
-│       │   ├── output.py
-│       │   ├── progress.py
-│       │   └── prompts.py
-│       └── cli.py
+│   └── dbops/               # Single package
+│       ├── core/            # Core logic
+│       │   ├── adapters/
+│       │   ├── selectors.py
+│       │   ├── jobs.py
+│       │   └── uc_models.py
+│       └── cli/             # CLI
+│           ├── commands/
+│           ├── common/
+│           │   ├── output.py
+│           │   ├── progress.py
+│           │   └── selector_builder.py
+│           └── cli.py
 ├── pyproject.toml
 └── README.md
 ```

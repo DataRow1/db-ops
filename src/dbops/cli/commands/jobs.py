@@ -3,13 +3,13 @@
 import typer
 from rich.prompt import Confirm
 
-from db_ops.core.job_models import RunStatus
-from db_ops.core.jobs import select_jobs as core_select_jobs
-from db_ops.core.runs import start_jobs_parallel
-from db_ops.core.selector_builder import build_selector
-from dbops_cli.common.context import AppContext, build_context
-from dbops_cli.common.exits import die, ok_exit, warn_exit
-from dbops_cli.common.options import (
+from dbops.core.jobs import RunStatus
+from dbops.core.jobs import select_jobs as core_select_jobs
+from dbops.core.runs import start_jobs_parallel
+from dbops.cli.common.selector_builder import build_selector
+from dbops.cli.common.context import AppContext, build_context
+from dbops.cli.common.exits import die, ok_exit, warn_exit
+from dbops.cli.common.options import (
     ConfirmOpt,
     DryRunOpt,
     NameOpt,
@@ -19,9 +19,9 @@ from dbops_cli.common.options import (
     UseOrOpt,
     WatchOpt,
 )
-from dbops_cli.common.output import out
-from dbops_cli.common.progress import wait_for_runs_with_progress
-from dbops_cli.tui import select_jobs as tui_select_jobs
+from dbops.cli.common.output import out
+from dbops.cli.common.progress import wait_for_runs_with_progress
+from dbops.cli.tui import select_jobs as tui_select_jobs
 
 app = typer.Typer(help="Work with Databricks Jobs", no_args_is_help=True)
 

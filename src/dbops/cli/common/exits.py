@@ -4,7 +4,7 @@ from typing import NoReturn
 
 import typer
 
-from dbops_cli.common.output import out
+from dbops.cli.common.output import out
 
 
 def ok_exit(msg: str | None = None) -> "None":

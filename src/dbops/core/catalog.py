@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 from typing import Iterable
 
-from db_ops.core.adapters.unitycatalog import UCTable, UnityCatalogAdapter
+from dbops.core.adapters.unitycatalog import UCTable, UnityCatalogAdapter
 
 
 @dataclass(frozen=True)

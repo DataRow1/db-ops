@@ -2,14 +2,14 @@
 
 import typer
 
-from dbops_cli.commands.jobs import app as jobs_app
-from dbops_cli.commands.unitycatalog import uc_app
-from dbops_cli.common.banner import opt_print_banner
+from dbops.cli.commands.jobs import app as jobs_app
+from dbops.cli.commands.unitycatalog import uc_app
+from dbops.cli.common.banner import opt_print_banner
 
 opt_print_banner()
 
 app = typer.Typer(
-    help="dbops-cli – Databricks operations tooling",
+    help="dbops-cli - Databricks operations tooling",
     no_args_is_help=True,
 )
 
