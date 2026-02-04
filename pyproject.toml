@@ -44,8 +44,8 @@ packages = ["src/dbops"]
 [tool.semantic_release]
 branch = "main"
 tag_format = "{version}"
-commit_parser = "angular"
+commit_parser = "conventional"
 version_toml = ["pyproject.toml:project.version"]
 
-[tool.semantic_release.changelog]
+[tool.semantic_release.changelog.default_templates]
 changelog_file = "CHANGELOG.md"
