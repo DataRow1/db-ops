@@ -13,17 +13,21 @@ from dbops.core.jobs import Job, JobRun, RunStatus
 
 
 class DatabricksJobsAdapter:
+    """Adapter around Databricks SDK Jobs APIs."""
+
     _CACHE_TTL_ENV = "DBOPS_JOBS_CACHE_TTL"
     _CACHE_DISABLE_ENV = "DBOPS_JOBS_CACHE_DISABLE"
     _CACHE_DIR_ENV = "DBOPS_CACHE_DIR"
     _DEFAULT_CACHE_TTL_SECONDS = 300
 
     def __init__(self, client: WorkspaceClient, profile: str | None = None):
+        """Create a jobs adapter for a Databricks workspace."""
         self.client = client
         self.profile = profile or "default"
         self._cache_path = self._build_cache_path()
 
     def _build_cache_path(self) -> Path:
+        """Return the cache file path for this workspace/profile."""
         cache_root = os.getenv(self._CACHE_DIR_ENV)
         if cache_root:
             base = Path(cache_root)
@@ -37,6 +41,7 @@ class DatabricksJobsAdapter:
         return cache_dir / f"jobs_{safe_key}.json"
 
     def _cache_ttl_seconds(self) -> int:
+        """Return cache TTL in seconds, honoring env override."""
         raw = os.getenv(self._CACHE_TTL_ENV)
         if raw is None:
             return self._DEFAULT_CACHE_TTL_SECONDS
@@ -46,12 +51,14 @@ class DatabricksJobsAdapter:
             return self._DEFAULT_CACHE_TTL_SECONDS
 
     def _cache_enabled(self) -> bool:
+        """Return True if caching is enabled."""
         disabled = os.getenv(self._CACHE_DISABLE_ENV, "").strip().lower()
         if disabled in {"1", "true", "yes"}:
             return False
         return self._cache_ttl_seconds() > 0
 
     def _load_cached_jobs(self) -> list[Job] | None:
+        """Load cached jobs if the cache is fresh."""
         if not self._cache_enabled():
             return None
         path = self._cache_path
@@ -81,6 +88,7 @@ class DatabricksJobsAdapter:
         return jobs
 
     def _store_cached_jobs(self, jobs: list[Job]) -> None:
+        """Persist jobs to the cache on disk."""
         if not self._cache_enabled():
             return
         path = self._cache_path
