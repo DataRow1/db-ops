@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -47,6 +48,7 @@ jobs:
         run: |
           . .venv/bin/activate
           semantic-release --noop -vv publish
+          semantic-release --noop -vv version --print
 
       - name: Determine release tag
         id: version
