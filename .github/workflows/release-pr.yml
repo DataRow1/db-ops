@@ -68,6 +68,11 @@ jobs:
           VERSION="${{ steps.next.outputs.version }}"
           BRANCH="rw/release-${VERSION}"
 
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            git push origin --delete "$BRANCH"
+          fi
+
+          git branch -D "$BRANCH" 2>/dev/null || true
           git checkout -b "$BRANCH"
           git push origin "$BRANCH"
 
