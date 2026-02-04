@@ -46,7 +46,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           . .venv/bin/activate
-          semantic-release publish --noop -vv
+          semantic-release --noop -vv publish
 
       - name: Determine release tag
         id: version
