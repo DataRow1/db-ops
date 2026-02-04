@@ -290,6 +290,12 @@ Before merging checklist:
 - `pytest`
 - `python -m dbops --help`
 - Conventional Commit message on your commits (or use the pre-commit hook)
+- PR title uses Conventional Commits (`feat:`/`fix:` for releases)
+
+Release flow note:
+
+- Use **Squash and merge** with a Conventional PR title. `semantic-release` reads the
+  squash commit title to decide the next version.
 
 Make shortcuts:
 
