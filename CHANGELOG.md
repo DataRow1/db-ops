@@ -1,7 +1,6 @@
 # Changelog
 
-## Unreleased
-- Release trigger (2026-02-03)
+<!-- version list -->
 
 All notable changes to this project will be documented in this file.
 

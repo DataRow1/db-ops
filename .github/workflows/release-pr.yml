@@ -1,9 +1,8 @@
 name: release-pr
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
 
 permissions:
   contents: write
@@ -11,12 +10,16 @@ permissions:
 
 jobs:
   release-pr:
-    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release):') }}
+    if: >-
+      contains(github.event.pull_request.labels.*.name, 'release') &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
           fetch-depth: 0
 
       - name: Set up Python 3.11
@@ -38,6 +41,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Skip if release commit already exists
+        run: |
+          if git log -1 --pretty=%s | grep -q '^chore(release):'; then
+            echo "Release commit already present."
+            exit 0
+          fi
+
       - name: Determine next release
         id: next
         run: |
@@ -45,54 +55,19 @@ jobs:
           semantic-release --noop -v version --print | tee /tmp/semrel.log
 
           if grep -q "No release will be made" /tmp/semrel.log; then
-            echo "create_pr=false" >> "$GITHUB_OUTPUT"
+            echo "No release needed."
+            echo "release_needed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          echo "release_needed=true" >> "$GITHUB_OUTPUT"
 
-          NEXT_VERSION=$(grep -E '^[0-9]+\.[0-9]+\.[0-9]+' /tmp/semrel.log | tail -n 1)
-          if [ -z "$NEXT_VERSION" ]; then
-            echo "Unable to determine next version"
-            exit 1
-          fi
-
-          echo "create_pr=true" >> "$GITHUB_OUTPUT"
-          echo "version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Create release branch
-        if: ${{ steps.next.outputs.create_pr == 'true' }}
-        id: branch
+      - name: Bump version and changelog
+        if: ${{ steps.next.outputs.release_needed == 'true' }}
         run: |
           . .venv/bin/activate
           semantic-release version --no-push
 
-          VERSION="${{ steps.next.outputs.version }}"
-          BRANCH="rw/release-${VERSION}"
-
-          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
-            git push origin --delete "$BRANCH"
-          fi
-
-          git branch -D "$BRANCH" 2>/dev/null || true
-          git checkout -b "$BRANCH"
-          git push origin "$BRANCH"
-
-          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
-
-      - name: Open release PR
-        if: ${{ steps.next.outputs.create_pr == 'true' }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push release commit
+        if: ${{ steps.next.outputs.release_needed == 'true' }}
         run: |
-          VERSION="${{ steps.next.outputs.version }}"
-          BRANCH="${{ steps.branch.outputs.branch }}"
-
-          if gh pr list --head "$BRANCH" --json number --jq '.[0].number' | grep -q .; then
-            echo "PR already exists for $BRANCH"
-            exit 0
-          fi
-
-          gh pr create \
-            --base main \
-            --head "$BRANCH" \
-            --title "chore(release): ${VERSION}" \
-            --body "Automated release PR for ${VERSION}."
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
