@@ -40,6 +40,12 @@ jobs:
           . .venv/bin/activate
           semantic-release publish
 
+      - name: Debug semantic-release (no publish)
+        if: ${{ always() }}
+        run: |
+          . .venv/bin/activate
+          semantic-release version --noop -v
+
       - name: Determine release tag
         id: version
         run: |
