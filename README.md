@@ -220,7 +220,7 @@ db-ops/
 │       │   ├── adapters/
 │       │   ├── selectors.py
 │       │   ├── jobs.py
-│       │   └── uc_models.py
+│       │   └── uc.py
 │       └── cli/             # CLI
 │           ├── commands/
 │           ├── common/

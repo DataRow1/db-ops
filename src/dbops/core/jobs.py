@@ -68,9 +68,15 @@ class RunStatus(str, Enum):
 
 
 class JobsAdapter(Protocol):
-    def find_jobs_by_regex(self, pattern: str) -> list[Job]: ...
+    """Interface for job lookup operations used by the core domain."""
 
-    def find_all_jobs(self) -> list[Job]: ...
+    def find_jobs_by_regex(self, pattern: str) -> list[Job]:
+        """Return jobs whose names match the regex pattern."""
+        ...
+
+    def find_all_jobs(self) -> list[Job]:
+        """Return all jobs visible to the current principal."""
+        ...
 
 
 def find_jobs(adapter: JobsAdapter, pattern: str) -> list[Job]:

@@ -55,7 +55,10 @@ class NameRegexSelector(JobSelector):
         Args:
             pattern: Regular expression pattern used to match job names.
         """
-        self.regex = re.compile(pattern)
+        try:
+            self.regex = re.compile(pattern)
+        except re.error as exc:
+            raise ValueError(f"Invalid regex expression: {exc}") from exc
 
     def matches(self, job: Job) -> bool:
         """

@@ -4,8 +4,9 @@ from dataclasses import dataclass
 
 from databricks.sdk import WorkspaceClient
 
+from dbops.cli.common.exits import die
 from dbops.core.adapters.databricksjobs import DatabricksJobsAdapter
-from dbops.core.auth import get_client
+from dbops.core.auth import AuthError, get_client
 
 
 @dataclass
@@ -26,6 +27,9 @@ def build_context(profile: str | None) -> AppContext:
     Returns:
         AppContext: Application context with configured client and adapter.
     """
-    client = get_client(profile)
-    adapter = DatabricksJobsAdapter(client)
+    try:
+        client = get_client(profile)
+    except AuthError as exc:
+        die(str(exc), code=1)
+    adapter = DatabricksJobsAdapter(client, profile=profile)
     return AppContext(profile=profile, client=client, adapter=adapter)
