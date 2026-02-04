@@ -48,10 +48,10 @@ version_toml = ["pyproject.toml:project.version"]
 allow_zero_version = true
 
 [tool.semantic_release.branches.main]
-match = "^(main|master)$"
+match = "^main$"
 
 [tool.semantic_release.branches.release_pr]
-match = "^rw/.*$"
+match = "^(?!main$).+"
 
 [tool.semantic_release.commit_parser_options]
 allowed_tags = [
