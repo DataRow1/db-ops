@@ -42,9 +42,11 @@ jobs:
 
       - name: Debug semantic-release (no publish)
         if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           . .venv/bin/activate
-          semantic-release -vv --noop version --print
+          semantic-release publish --noop -vv
 
       - name: Determine release tag
         id: version
