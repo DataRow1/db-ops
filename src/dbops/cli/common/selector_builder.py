@@ -55,13 +55,13 @@ def build_selector(
 
     for tag in tags:
         if "=" not in tag:
-            raise ValueError(f"Ongeldige tag selector: '{tag}' (verwacht key=value)")
+            raise ValueError(f"Invalid tag selector: '{tag}' (expecting key=value)")
 
         key, value = tag.split("=", 1)
         selectors.append(TagSelector(key, value))
 
     if not selectors:
-        raise ValueError("Minstens één selector is verplicht (--name of --tag)")
+        raise ValueError("At least one selector is required (--name or --tag)")
 
     if len(selectors) == 1:
         return selectors[0]
