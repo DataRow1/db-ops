@@ -38,6 +38,13 @@ It is designed for data engineers and platform teams who want safe, fast, and co
 - Databricks CLI
 - Access to a Databricks workspace
 
+### Using homebrew (recommended)
+
+```bash
+brew tap datarow1/brick-ops
+brew install brick-ops
+```
+
 ### Using uv (from source)
 
 ```bash
@@ -48,14 +55,7 @@ source .venv/bin/activate
 uv pip install .
 ```
 
-### Using homebrew (recommended)
-
-```bash
-brew tap datarow1/brick-ops
-brew install brick-ops
-```
-
-Verify (after authentication - see below):
+### Verify (after authentication - see below):
 
 ```bash
 dbops --help
@@ -74,7 +74,7 @@ databricks auth login
 Using a specific profile:
 
 ```bash
-dbops jobs list --profile prod
+dbops jobs --profile prod find --name "example_job"
 ```
 
 ---
