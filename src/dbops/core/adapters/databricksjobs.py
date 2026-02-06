@@ -20,11 +20,18 @@ class DatabricksJobsAdapter:
     _CACHE_DIR_ENV = "DBOPS_CACHE_DIR"
     _DEFAULT_CACHE_TTL_SECONDS = 300
 
-    def __init__(self, client: WorkspaceClient, profile: str | None = None):
+    def __init__(
+        self,
+        client: WorkspaceClient,
+        profile: str | None = None,
+        *,
+        force_refresh: bool = False,
+    ):
         """Create a jobs adapter for a Databricks workspace."""
         self.client = client
         self.profile = profile or "default"
         self._cache_path = self._build_cache_path()
+        self._force_refresh = force_refresh
 
     def _build_cache_path(self) -> Path:
         """Return the cache file path for this workspace/profile."""
@@ -59,6 +66,8 @@ class DatabricksJobsAdapter:
 
     def _load_cached_jobs(self) -> list[Job] | None:
         """Load cached jobs if the cache is fresh."""
+        if self._force_refresh:
+            return None
         if not self._cache_enabled():
             return None
         path = self._cache_path

@@ -53,3 +53,9 @@ DryRunOpt = typer.Option(
     "--dry-run",
     help="Show which jobs would start, but don't start anything",
 )
+
+RefreshOpt = typer.Option(
+    False,
+    "--refresh",
+    help="Force refresh jobs cache (either part of another command or alone to just refresh cache)",
+)

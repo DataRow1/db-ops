@@ -15,6 +15,7 @@ from dbops.cli.common.options import (
     NameOpt,
     ParallelOpt,
     ProfileOpt,
+    RefreshOpt,
     TagOpt,
     UseOrOpt,
     WatchOpt,
@@ -30,9 +31,15 @@ app = typer.Typer(help="Work with Databricks Jobs", no_args_is_help=True)
 def _init(
     ctx: typer.Context,
     profile: str | None = ProfileOpt,
+    refresh: bool = RefreshOpt,
 ):
+    """Initialize jobs context (use --refresh alone to refresh cache)."""
     # Build shared context (client + adapter) once per invocation
-    ctx.obj = build_context(profile)
+    ctx.obj = build_context(profile, refresh_jobs=refresh)
+    if refresh and ctx.invoked_subcommand is None:
+        appctx: AppContext = ctx.obj
+        appctx.adapter.find_all_jobs()
+        ok_exit("Jobs cache refreshed")
 
 
 @app.command()
