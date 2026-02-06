@@ -18,7 +18,7 @@ class AppContext:
     adapter: DatabricksJobsAdapter
 
 
-def build_context(profile: str | None) -> AppContext:
+def build_context(profile: str | None, *, refresh_jobs: bool = False) -> AppContext:
     """Build and return the application context with Databricks client and adapter.
 
     Args:
@@ -31,5 +31,5 @@ def build_context(profile: str | None) -> AppContext:
         client = get_client(profile)
     except AuthError as exc:
         die(str(exc), code=1)
-    adapter = DatabricksJobsAdapter(client, profile=profile)
+    adapter = DatabricksJobsAdapter(client, profile=profile, force_refresh=refresh_jobs)
     return AppContext(profile=profile, client=client, adapter=adapter)
