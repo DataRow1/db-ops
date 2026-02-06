@@ -24,7 +24,11 @@ from dbops.cli.common.output import out
 from dbops.cli.common.progress import wait_for_runs_with_progress
 from dbops.cli.tui import select_jobs as tui_select_jobs
 
-app = typer.Typer(help="Work with Databricks Jobs", no_args_is_help=True)
+app = typer.Typer(
+    help="Work with Databricks Jobs",
+    no_args_is_help=False,
+    invoke_without_command=True,
+)
 
 
 @app.callback()
@@ -40,6 +44,9 @@ def _init(
         appctx: AppContext = ctx.obj
         appctx.adapter.find_all_jobs()
         ok_exit("Jobs cache refreshed")
+    if ctx.invoked_subcommand is None:
+        typer.echo(ctx.get_help())
+        raise typer.Exit(0)
 
 
 @app.command()
