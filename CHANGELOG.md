@@ -2,6 +2,28 @@
 
 <!-- version list -->
 
+## v0.4.0 (2026-02-06)
+
+### Documentation
+
+- Edit readme
+  ([`3305e96`](https://github.com/DataRow1/brick-ops/commit/3305e9645706fa1c34c6854c4bda2eef0ae867b4))
+
+- Edit readme
+  ([`eefaa68`](https://github.com/DataRow1/brick-ops/commit/eefaa68682d5a5db5e80f99b13811805b2f61a32))
+
+### Features
+
+- Add forced refresh of cache
+  ([`c255939`](https://github.com/DataRow1/brick-ops/commit/c255939c99a10e7f13d456c1841ff5f15e51c343))
+
+- Add forced refresh of cache
+  ([`d71e77c`](https://github.com/DataRow1/brick-ops/commit/d71e77c00e4ac881910da98e03dff85ef61f22be))
+
+- Add forced refresh of cache
+  ([`7696d88`](https://github.com/DataRow1/brick-ops/commit/7696d88a4baa5f60ba7e23859fbb9bbd9f0dfd0e))
+
+
 ## v0.3.0 (2026-02-04)
 
 ### Bug Fixes
