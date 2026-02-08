@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v0.4.1 (2026-02-08)
+
+### Bug Fixes
+
+- Fixed cache behavior
+  ([`0e6e53f`](https://github.com/DataRow1/brick-ops/commit/0e6e53f2820fecce156c778c070d9a313b40f7e0))
+
+### Chores
+
+- Edited codeowners
+  ([`20a159c`](https://github.com/DataRow1/brick-ops/commit/20a159c188721d3eab9558e838ed1bec5f4a5faa))
+
+
 ## v0.4.0 (2026-02-06)
 
 ### Documentation

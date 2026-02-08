@@ -9,12 +9,12 @@ from dbops.cli.common.banner import opt_print_banner
 opt_print_banner()
 
 app = typer.Typer(
-    help="dbops-cli - Databricks operations tooling",
+    help="Databricks operations tooling",
     no_args_is_help=True,
 )
 
 app.add_typer(jobs_app, name="jobs", help="Search / start / monitor Databricks jobs.")
-app.add_typer(uc_app, name="uc")
+app.add_typer(uc_app, name="uc", help="Search / manage Unity Catalog objects.")
 
 
 if __name__ == "__main__":

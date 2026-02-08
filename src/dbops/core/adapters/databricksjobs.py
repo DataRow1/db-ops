@@ -132,6 +132,7 @@ class DatabricksJobsAdapter:
             )
 
         self._store_cached_jobs(jobs)
+        self._force_refresh = False
         return jobs
 
     def start_job(self, job_id: int) -> JobRun:
