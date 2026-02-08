@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping
 
@@ -48,6 +49,12 @@ class Out:
     def info(self, msg: str) -> None:
         """Print an info message."""
         console.print(f"[title]›[/] {msg}")
+
+    @contextmanager
+    def status(self, msg: str):
+        """Show a transient status spinner while work is in progress."""
+        with console.status(msg, spinner="dots"):
+            yield
 
     def success(self, msg: str) -> None:
         """Print a success message."""

@@ -2,6 +2,28 @@
 
 <!-- version list -->
 
+## v0.4.2 (2026-02-08)
+
+### Bug Fixes
+
+- Add job refresh status
+  ([`292dd35`](https://github.com/DataRow1/brick-ops/commit/292dd35dba1bef1f26053122738611ecb457e882))
+
+- Add spinners on waitable actions
+  ([`42152ee`](https://github.com/DataRow1/brick-ops/commit/42152ee52a9f38a410fb040ebd7b822bd9415cbb))
+
+### Chores
+
+- Clean up jobs adapter logic
+  ([`4f33229`](https://github.com/DataRow1/brick-ops/commit/4f33229150b94f6410374406e113d18f55957c6a))
+
+- Fix context logic
+  ([`21fe6ff`](https://github.com/DataRow1/brick-ops/commit/21fe6ffbe12ab2cbc4112d30a7f4bd45338968b1))
+
+- Fix context logic
+  ([`aa19008`](https://github.com/DataRow1/brick-ops/commit/aa190082f74be6d7c3b2bcb66eb00a3b735a6e57))
+
+
 ## v0.4.1 (2026-02-08)
 
 ### Bug Fixes

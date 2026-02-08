@@ -4,7 +4,8 @@ import re
 from dataclasses import dataclass
 from typing import Iterable
 
-from dbops.core.adapters.unitycatalog import UCTable, UnityCatalogAdapter
+from dbops.core.adapters.unitycatalog import UnityCatalogAdapter
+from dbops.core.uc import UCTable
 
 
 @dataclass(frozen=True)

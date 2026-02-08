@@ -5,8 +5,6 @@ import re
 import typer
 from databricks.sdk.errors import NotFound, PermissionDenied
 
-from dbops.core.adapters.unitycatalog import UnityCatalogAdapter
-from dbops.core.auth import get_client
 from dbops.core.catalog import (
     delete_schema_with_tables,
     delete_tables,
@@ -15,15 +13,30 @@ from dbops.core.catalog import (
     parse_schema_full_name,
     set_tables_owner,
 )
+from dbops.cli.common.context import UCAppContext, build_uc_context
 from dbops.cli.common.exits import exit_from_exc
 from dbops.cli.common.options import ProfileOpt
 from dbops.cli.common.output import out
 
-uc_app = typer.Typer(help="Unity Catalog operations.", no_args_is_help=True)
+uc_app = typer.Typer(
+    help="Unity Catalog operations.",
+    no_args_is_help=False,
+    invoke_without_command=True,
+)
+
+
+@uc_app.callback()
+def _init(ctx: typer.Context, profile: str | None = ProfileOpt):
+    """Initialize Unity Catalog context."""
+    ctx.obj = build_uc_context(profile)
+    if ctx.invoked_subcommand is None:
+        typer.echo(ctx.get_help())
+        raise typer.Exit(0)
 
 
 @uc_app.command("tables-list")
 def tables_list(
+    ctx: typer.Context,
     schema_arg: str | None = typer.Argument(
         None, help="Schema in the form catalog.schema"
     ),
@@ -39,11 +52,10 @@ def tables_list(
         "--type",
         help="Filter by table type (e.g. MANAGED, EXTERNAL, VIEW). Case-insensitive.",
     ),
-    profile: str | None = ProfileOpt,
 ):
     """List Unity Catalog tables in a schema."""
-    client = get_client(profile)
-    adapter = UnityCatalogAdapter(client)
+    appctx: UCAppContext = ctx.obj
+    adapter = appctx.adapter
 
     schema_full_name = schema or schema_arg
     if not schema_full_name:
@@ -55,7 +67,8 @@ def tables_list(
     catalog, schema_name = parse_schema_full_name(schema_full_name)
 
     try:
-        tables = adapter.list_tables(catalog=catalog, schema=schema_name)
+        with out.status("Loading tables..."):
+            tables = adapter.list_tables(catalog=catalog, schema=schema_name)
     except NotFound as exc:
         exit_from_exc(
             exc, message=f"Schema '{schema_full_name}' does not exist.", code=1
@@ -87,6 +100,7 @@ def tables_list(
 
 @uc_app.command("tables-owner-set")
 def tables_owner_set(
+    ctx: typer.Context,
     schema_arg: str | None = typer.Argument(
         None, help="Schema in the form catalog.schema"
     ),
@@ -106,11 +120,10 @@ def tables_owner_set(
         False, "--dry-run", help="Show what would change, but do nothing"
     ),
     yes: bool = typer.Option(False, "--yes", help="Skip confirmation prompt"),
-    profile: str | None = ProfileOpt,
 ):
     """Set the owner for one or more Unity Catalog tables."""
-    client = get_client(profile)
-    adapter = UnityCatalogAdapter(client)
+    appctx: UCAppContext = ctx.obj
+    adapter = appctx.adapter
 
     schema_full_name = schema or schema_arg
     if not schema_full_name:
@@ -121,7 +134,8 @@ def tables_owner_set(
 
     catalog, schema_name = parse_schema_full_name(schema_full_name)
     try:
-        tables = adapter.list_tables(catalog=catalog, schema=schema_name)
+        with out.status("Loading tables..."):
+            tables = adapter.list_tables(catalog=catalog, schema=schema_name)
     except NotFound as exc:
         exit_from_exc(
             exc, message=f"Schema '{schema_full_name}' does not exist.", code=1
@@ -158,7 +172,8 @@ def tables_owner_set(
 
     if dry_run:
         out.warn("DRY RUN: no changes will be made.")
-        results = set_tables_owner(adapter, selected, owner, dry_run=True)
+        with out.status("Building owner change preview..."):
+            results = set_tables_owner(adapter, selected, owner, dry_run=True)
         out.uc_owner_change_results_table(results, title="Owner change (dry-run)")
         raise typer.Exit(0)
 
@@ -167,7 +182,8 @@ def tables_owner_set(
             out.warn("Cancelled.")
             raise typer.Exit(0)
 
-    results = set_tables_owner(adapter, selected, owner, dry_run=False)
+    with out.status("Updating table owners..."):
+        results = set_tables_owner(adapter, selected, owner, dry_run=False)
     out.uc_owner_change_results_table(results, title="Owner change results")
 
     failed = [r for r in results if not getattr(r, "ok", False)]
@@ -180,6 +196,7 @@ def tables_owner_set(
 
 @uc_app.command("tables-delete")
 def tables_delete(
+    ctx: typer.Context,
     schema_arg: str | None = typer.Argument(
         None, help="Schema in the form catalog.schema"
     ),
@@ -196,11 +213,10 @@ def tables_delete(
         False, "--dry-run", help="Show what would be deleted, but do nothing"
     ),
     yes: bool = typer.Option(False, "--yes", help="Skip confirmation prompt"),
-    profile: str | None = ProfileOpt,
 ):
     """Delete one or more Unity Catalog tables (owner -> delete)."""
-    client = get_client(profile)
-    adapter = UnityCatalogAdapter(client)
+    appctx: UCAppContext = ctx.obj
+    adapter = appctx.adapter
 
     schema_full_name = schema or schema_arg
     if not schema_full_name:
@@ -211,7 +227,8 @@ def tables_delete(
 
     catalog, schema_name = parse_schema_full_name(schema_full_name)
     try:
-        tables = adapter.list_tables(catalog=catalog, schema=schema_name)
+        with out.status("Loading tables..."):
+            tables = adapter.list_tables(catalog=catalog, schema=schema_name)
     except NotFound as exc:
         exit_from_exc(
             exc, message=f"Schema '{catalog}.{schema_name}' does not exist.", code=1
@@ -256,7 +273,9 @@ def tables_delete(
             out.warn("Cancelled.")
             raise typer.Exit(0)
 
-    results = delete_tables(adapter, selected, dry_run=dry_run)
+    status_msg = "Planning table deletions..." if dry_run else "Deleting tables..."
+    with out.status(status_msg):
+        results = delete_tables(adapter, selected, dry_run=dry_run)
 
     out.uc_delete_results_table(results, title="Delete results")
 
@@ -270,6 +289,7 @@ def tables_delete(
 
 @uc_app.command("schema-delete")
 def schema_delete(
+    ctx: typer.Context,
     schema: str = typer.Argument(..., help="Schema in the form catalog.schema"),
     name: str | None = typer.Option(
         None, "--name", help="Optional regex to select a subset of tables"
@@ -281,24 +301,24 @@ def schema_delete(
         False, "--dry-run", help="Show what would be deleted, but do nothing"
     ),
     yes: bool = typer.Option(False, "--yes", help="Skip confirmation prompt"),
-    profile: str | None = ProfileOpt,
 ):
     """Delete schema after taking ownership and deleting tables within it."""
-    client = get_client(profile)
-    adapter = UnityCatalogAdapter(client)
+    appctx: UCAppContext = ctx.obj
+    adapter = appctx.adapter
 
     if "." not in schema:
         out.error("Schema must be in the form catalog.schema")
         raise typer.Exit(2)
 
     try:
-        plan = delete_schema_with_tables(
-            adapter,
-            schema_full_name=schema,
-            table_name_regex=name,
-            force_schema_delete=force,
-            dry_run=True,
-        )
+        with out.status("Building deletion plan..."):
+            plan = delete_schema_with_tables(
+                adapter,
+                schema_full_name=schema,
+                table_name_regex=name,
+                force_schema_delete=force,
+                dry_run=True,
+            )
     except NotFound as exc:
         exit_from_exc(exc, message=f"Schema '{schema}' does not exist.", code=1)
     except PermissionDenied as exc:
@@ -325,19 +345,21 @@ def schema_delete(
             out.warn("Cancelled.")
             raise typer.Exit(0)
 
-    delete_schema_with_tables(
-        adapter,
-        schema_full_name=schema,
-        table_name_regex=name,
-        force_schema_delete=force,
-        dry_run=False,
-    )
+    with out.status("Deleting tables and schema..."):
+        delete_schema_with_tables(
+            adapter,
+            schema_full_name=schema,
+            table_name_regex=name,
+            force_schema_delete=force,
+            dry_run=False,
+        )
 
     out.success("Schema deletion completed.")
 
 
 @uc_app.command("schemas-drop-empty")
 def schemas_drop_empty(
+    ctx: typer.Context,
     catalog: str = typer.Option(..., "--catalog", help="Catalog name"),
     name: str | None = typer.Option(
         None, "--name", help="Optional regex filter on schema full name"
@@ -350,14 +372,14 @@ def schemas_drop_empty(
         False, "--dry-run", help="Show what would be deleted, but do nothing"
     ),
     yes: bool = typer.Option(False, "--yes", help="Skip confirmation prompt"),
-    profile: str | None = ProfileOpt,
 ):
     """Drop schemas that are currently empty (owner -> current user -> drop)."""
-    client = get_client(profile)
-    adapter = UnityCatalogAdapter(client)
+    appctx: UCAppContext = ctx.obj
+    adapter = appctx.adapter
 
     try:
-        empty = find_empty_schemas(adapter, catalog=catalog, name_regex=name)
+        with out.status("Scanning schemas for empties..."):
+            empty = find_empty_schemas(adapter, catalog=catalog, name_regex=name)
     except NotFound as exc:
         exit_from_exc(exc, message=f"Catalog '{catalog}' does not exist.", code=1)
     except PermissionDenied as exc:
@@ -384,7 +406,8 @@ def schemas_drop_empty(
 
     if dry_run:
         out.warn("DRY RUN: no changes will be made.")
-        results = drop_empty_schemas(adapter, selected, force=force, dry_run=True)
+        with out.status("Planning schema drops..."):
+            results = drop_empty_schemas(adapter, selected, force=force, dry_run=True)
         out.uc_schema_drop_results_table(results, title="Schema drop (dry-run)")
         raise typer.Exit(0)
 
@@ -393,7 +416,8 @@ def schemas_drop_empty(
             out.warn("Cancelled.")
             raise typer.Exit(0)
 
-    results = drop_empty_schemas(adapter, selected, force=force, dry_run=False)
+    with out.status("Dropping schemas..."):
+        results = drop_empty_schemas(adapter, selected, force=force, dry_run=False)
     out.uc_schema_drop_results_table(results, title="Schema drop results")
 
     failed = [r for r in results if not getattr(r, "ok", False)]

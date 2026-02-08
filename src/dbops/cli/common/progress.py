@@ -15,14 +15,14 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 
-from dbops.core.adapters.databricksjobs import DatabricksJobsAdapter
 from dbops.core.jobs import JobRun, RunStatus
+from dbops.core.runs import JobRunsAdapter
 
 console = Console()
 
 
 def wait_for_runs_with_progress(
-    adapter: DatabricksJobsAdapter,
+    adapter: JobRunsAdapter,
     runs: list[JobRun],
     poll_interval: int = 5,
 ) -> list[tuple[JobRun, RunStatus]]:

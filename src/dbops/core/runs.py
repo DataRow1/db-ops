@@ -9,13 +9,25 @@ and predictable.
 
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Protocol
 
-from dbops.core.adapters.databricksjobs import DatabricksJobsAdapter
 from dbops.core.jobs import JobRun, RunStatus
 
 
+class JobRunsAdapter(Protocol):
+    """Interface for starting jobs and querying run status."""
+
+    def start_job(self, job_id: int) -> JobRun:
+        """Start a job and return its run handle."""
+        ...
+
+    def get_run_status(self, run_id: int) -> RunStatus:
+        """Return the current status for a job run."""
+        ...
+
+
 def start_jobs_parallel(
-    adapter: DatabricksJobsAdapter,
+    adapter: JobRunsAdapter,
     job_ids: list[int],
     max_parallel: int,
 ) -> list[JobRun]:
@@ -47,7 +59,7 @@ def start_jobs_parallel(
 
 
 def wait_for_run(
-    adapter: DatabricksJobsAdapter,
+    adapter: JobRunsAdapter,
     run_id: int,
     poll_interval: int = 5,
 ) -> RunStatus:

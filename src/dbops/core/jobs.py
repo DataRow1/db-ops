@@ -70,30 +70,9 @@ class RunStatus(str, Enum):
 class JobsAdapter(Protocol):
     """Interface for job lookup operations used by the core domain."""
 
-    def find_jobs_by_regex(self, pattern: str) -> list[Job]:
-        """Return jobs whose names match the regex pattern."""
-        ...
-
     def find_all_jobs(self) -> list[Job]:
         """Return all jobs visible to the current principal."""
         ...
-
-
-def find_jobs(adapter: JobsAdapter, pattern: str) -> list[Job]:
-    """
-    Find jobs using a regular expression pattern.
-
-    This is a thin convenience wrapper around the Databricks adapter that
-    delegates regex-based matching to the underlying implementation.
-
-    Args:
-        adapter: Databricks jobs adapter used to query jobs.
-        pattern: Regular expression applied to job names.
-
-    Returns:
-        A list of Job objects whose names match the given pattern.
-    """
-    return adapter.find_jobs_by_regex(pattern)
 
 
 def select_jobs(adapter: JobsAdapter, selector: JobSelector) -> list[Job]:
