@@ -48,8 +48,8 @@ brew install brick-ops
 ### Using uv (from source)
 
 ```bash
-git clone https://github.com/datarow1/db-ops.git
-cd db-ops
+git clone https://github.com/datarow1/brick-ops.git
+cd brick-ops
 uv venv
 source .venv/bin/activate
 uv pip install .
@@ -93,7 +93,8 @@ dbops
     ├── tables-list
     ├── tables-delete
     ├── tables-owner-set
-    └── schema-delete
+    ├── schema-delete
+    └── schemas-drop-empty
 ```
 
 ---
@@ -189,6 +190,20 @@ What happens:
 2. All tables are deleted
 3. Schema is deleted
 4. Results are displayed in a summary table
+
+---
+
+### Drop empty schemas
+
+```bash
+dbops uc schemas-drop-empty --catalog main
+```
+
+Dry-run:
+
+```bash
+dbops uc schemas-drop-empty --catalog main --dry-run
+```
 
 ---
 

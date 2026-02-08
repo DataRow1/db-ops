@@ -47,6 +47,11 @@ def start_jobs_parallel(
         A list of JobRun objects representing the started job runs.
         The order of the returned runs is not guaranteed.
     """
+    if max_parallel < 1:
+        raise ValueError("max_parallel must be >= 1")
+    if not job_ids:
+        return []
+
     runs: list[JobRun] = []
 
     with ThreadPoolExecutor(max_workers=max_parallel) as pool:

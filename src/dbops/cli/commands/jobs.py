@@ -131,4 +131,4 @@ def run(
 
         failed = any(status != RunStatus.SUCCESS for _, status in results)
         if failed:
-            raise typer.Exit(2)
+            raise typer.Exit(1)

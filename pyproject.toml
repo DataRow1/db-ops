@@ -21,8 +21,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/DataRow1/db-ops"
-Repository = "https://github.com/DataRow1/db-ops"
+Homepage = "https://github.com/DataRow1/brick-ops"
+Repository = "https://github.com/DataRow1/brick-ops"
 
 [project.optional-dependencies]
 cli = ["typer>=0.20.1", "rich>=13.7", "questionary>=2.1.1"]

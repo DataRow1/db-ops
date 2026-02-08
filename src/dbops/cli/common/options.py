@@ -32,6 +32,7 @@ ParallelOpt = typer.Option(
     5,
     "--parallel",
     "-n",
+    min=1,
     help="Number of jobs to start in parallel",
 )
 

@@ -34,6 +34,99 @@ def _init(ctx: typer.Context, profile: str | None = ProfileOpt):
         raise typer.Exit(0)
 
 
+def _parse_schema_or_exit(schema_full_name: str) -> tuple[str, str, str]:
+    """Validate and normalize a schema full name (catalog.schema)."""
+    try:
+        catalog, schema_name = parse_schema_full_name(schema_full_name)
+    except ValueError as exc:
+        out.error(str(exc))
+        raise typer.Exit(2) from exc
+    return f"{catalog}.{schema_name}", catalog, schema_name
+
+
+def _resolve_schema_or_exit(
+    *,
+    schema_arg: str | None,
+    schema_opt: str | None,
+) -> tuple[str, str, str]:
+    """Resolve schema from argument/option and validate format."""
+    schema_full_name = schema_opt or schema_arg
+    if not schema_full_name:
+        out.error("Missing schema. Provide it as a positional argument or via --schema.")
+        raise typer.Exit(2)
+    return _parse_schema_or_exit(schema_full_name)
+
+
+def _compile_regex_or_exit(pattern: str | None, *, option_name: str) -> re.Pattern | None:
+    """Compile a regex pattern and convert invalid syntax into CLI input errors."""
+    if not pattern:
+        return None
+    try:
+        return re.compile(pattern)
+    except re.error as exc:
+        out.error(f"Invalid regex for {option_name}: {exc}")
+        raise typer.Exit(2) from exc
+
+
+@uc_app.command("catalogs-list")
+def catalogs_list(ctx: typer.Context):
+    """List Unity Catalog catalogs."""
+    appctx: UCAppContext = ctx.obj
+    adapter = appctx.adapter
+
+    try:
+        with out.status("Loading catalogs..."):
+            catalogs = adapter.list_catalogs()
+    except PermissionDenied as exc:
+        exit_from_exc(exc, message="No permission to list catalogs.", code=1)
+
+    if not catalogs:
+        out.warn("No catalogs found.")
+        raise typer.Exit(0)
+
+    out.header("Catalogs")
+    out.info(f"Catalogs: {len(catalogs)}")
+    out.catalogs_table(catalogs, title="Catalogs")
+
+
+@uc_app.command("schemas-list")
+def schemas_list(
+    ctx: typer.Context,
+    catalog: str = typer.Option(..., "--catalog", help="Catalog name"),
+    name: str | None = typer.Option(
+        None, "--name", help="Regex filter for schema full names"
+    ),
+    owner: str | None = typer.Option(None, "--owner", help="Filter by schema owner"),
+):
+    """List Unity Catalog schemas in a catalog."""
+    appctx: UCAppContext = ctx.obj
+    adapter = appctx.adapter
+    name_rx = _compile_regex_or_exit(name, option_name="--name")
+
+    try:
+        with out.status("Loading schemas..."):
+            schemas = adapter.list_schemas(catalog=catalog)
+    except NotFound as exc:
+        exit_from_exc(exc, message=f"Catalog '{catalog}' does not exist.", code=1)
+    except PermissionDenied as exc:
+        exit_from_exc(exc, message=f"No permission to access catalog '{catalog}'.", code=1)
+
+    if name_rx:
+        schemas = [s for s in schemas if name_rx.search(s.full_name)]
+
+    if owner:
+        want_owner = owner.lower()
+        schemas = [s for s in schemas if (s.owner or "").lower() == want_owner]
+
+    if not schemas:
+        out.warn("No schemas found.")
+        raise typer.Exit(0)
+
+    out.header("Schemas")
+    out.info(f"Catalog: {catalog} | Schemas: {len(schemas)}")
+    out.schemas_table(schemas, title="Schemas")
+
+
 @uc_app.command("tables-list")
 def tables_list(
     ctx: typer.Context,
@@ -56,15 +149,11 @@ def tables_list(
     """List Unity Catalog tables in a schema."""
     appctx: UCAppContext = ctx.obj
     adapter = appctx.adapter
-
-    schema_full_name = schema or schema_arg
-    if not schema_full_name:
-        out.error(
-            "Missing schema. Provide it as a positional argument or via --schema."
-        )
-        raise typer.Exit(2)
-
-    catalog, schema_name = parse_schema_full_name(schema_full_name)
+    schema_full_name, catalog, schema_name = _resolve_schema_or_exit(
+        schema_arg=schema_arg,
+        schema_opt=schema,
+    )
+    name_rx = _compile_regex_or_exit(name, option_name="--name")
 
     try:
         with out.status("Loading tables..."):
@@ -78,9 +167,8 @@ def tables_list(
             exc, message=f"No permission to access schema '{schema_full_name}'.", code=1
         )
 
-    if name:
-        rx = re.compile(name)
-        tables = [t for t in tables if rx.search(t.full_name)]
+    if name_rx:
+        tables = [t for t in tables if name_rx.search(t.full_name)]
 
     if owner:
         tables = [t for t in tables if (t.owner or "").lower() == owner.lower()]
@@ -124,15 +212,11 @@ def tables_owner_set(
     """Set the owner for one or more Unity Catalog tables."""
     appctx: UCAppContext = ctx.obj
     adapter = appctx.adapter
-
-    schema_full_name = schema or schema_arg
-    if not schema_full_name:
-        out.error(
-            "Missing schema. Provide it as a positional argument or via --schema."
-        )
-        raise typer.Exit(2)
-
-    catalog, schema_name = parse_schema_full_name(schema_full_name)
+    schema_full_name, catalog, schema_name = _resolve_schema_or_exit(
+        schema_arg=schema_arg,
+        schema_opt=schema,
+    )
+    name_rx = _compile_regex_or_exit(name, option_name="--name")
     try:
         with out.status("Loading tables..."):
             tables = adapter.list_tables(catalog=catalog, schema=schema_name)
@@ -145,9 +229,8 @@ def tables_owner_set(
             exc, message=f"No permission to access schema '{schema_full_name}'.", code=1
         )
 
-    if name:
-        rx = re.compile(name)
-        tables = [t for t in tables if rx.search(t.full_name)]
+    if name_rx:
+        tables = [t for t in tables if name_rx.search(t.full_name)]
 
     if not tables:
         out.warn("No tables found.")
@@ -217,15 +300,11 @@ def tables_delete(
     """Delete one or more Unity Catalog tables (owner -> delete)."""
     appctx: UCAppContext = ctx.obj
     adapter = appctx.adapter
-
-    schema_full_name = schema or schema_arg
-    if not schema_full_name:
-        out.error(
-            "Missing schema. Provide it as a positional argument or via --schema."
-        )
-        raise typer.Exit(2)
-
-    catalog, schema_name = parse_schema_full_name(schema_full_name)
+    schema_full_name, catalog, schema_name = _resolve_schema_or_exit(
+        schema_arg=schema_arg,
+        schema_opt=schema,
+    )
+    name_rx = _compile_regex_or_exit(name, option_name="--name")
     try:
         with out.status("Loading tables..."):
             tables = adapter.list_tables(catalog=catalog, schema=schema_name)
@@ -242,9 +321,8 @@ def tables_delete(
 
     full_names = [t.full_name for t in tables]
 
-    if name:
-        rx = re.compile(name)
-        full_names = [n for n in full_names if rx.search(n)]
+    if name_rx:
+        full_names = [n for n in full_names if name_rx.search(n)]
 
     if not full_names:
         out.warn("No tables found.")
@@ -284,7 +362,10 @@ def tables_delete(
         out.error(f"Failed to delete {len(failed)} table(s).")
         raise typer.Exit(1)
 
-    out.success(f"Deleted {len(results)} table(s).")
+    if dry_run:
+        out.success(f"Dry-run complete: {len(results)} table(s) would be deleted.")
+    else:
+        out.success(f"Deleted {len(results)} table(s).")
 
 
 @uc_app.command("schema-delete")
@@ -305,25 +386,26 @@ def schema_delete(
     """Delete schema after taking ownership and deleting tables within it."""
     appctx: UCAppContext = ctx.obj
     adapter = appctx.adapter
-
-    if "." not in schema:
-        out.error("Schema must be in the form catalog.schema")
-        raise typer.Exit(2)
+    schema_full_name, _, _ = _parse_schema_or_exit(schema)
+    _compile_regex_or_exit(name, option_name="--name")
 
     try:
         with out.status("Building deletion plan..."):
             plan = delete_schema_with_tables(
                 adapter,
-                schema_full_name=schema,
+                schema_full_name=schema_full_name,
                 table_name_regex=name,
                 force_schema_delete=force,
                 dry_run=True,
             )
+    except ValueError as exc:
+        out.error(str(exc))
+        raise typer.Exit(2) from exc
     except NotFound as exc:
-        exit_from_exc(exc, message=f"Schema '{schema}' does not exist.", code=1)
+        exit_from_exc(exc, message=f"Schema '{schema_full_name}' does not exist.", code=1)
     except PermissionDenied as exc:
         exit_from_exc(
-            exc, message=f"No permission to access schema '{schema}'.", code=1
+            exc, message=f"No permission to access schema '{schema_full_name}'.", code=1
         )
 
     out.header("Deletion plan")
@@ -346,13 +428,35 @@ def schema_delete(
             raise typer.Exit(0)
 
     with out.status("Deleting tables and schema..."):
-        delete_schema_with_tables(
-            adapter,
-            schema_full_name=schema,
-            table_name_regex=name,
-            force_schema_delete=force,
-            dry_run=False,
-        )
+        try:
+            result = delete_schema_with_tables(
+                adapter,
+                schema_full_name=schema_full_name,
+                table_name_regex=name,
+                force_schema_delete=force,
+                dry_run=False,
+            )
+        except NotFound as exc:
+            exit_from_exc(
+                exc, message=f"Schema '{schema_full_name}' does not exist.", code=1
+            )
+        except PermissionDenied as exc:
+            exit_from_exc(
+                exc,
+                message=f"No permission to modify schema '{schema_full_name}'.",
+                code=1,
+            )
+        except ValueError as exc:
+            out.error(str(exc))
+            raise typer.Exit(2) from exc
+
+    table_results = result.get("table_results", [])
+    out.uc_delete_results_table(table_results, title="Table deletion results")
+
+    failed = [r for r in table_results if getattr(r, "error", None)]
+    if failed:
+        out.error(f"Failed to delete {len(failed)} table(s).")
+        raise typer.Exit(1)
 
     out.success("Schema deletion completed.")
 
@@ -376,6 +480,7 @@ def schemas_drop_empty(
     """Drop schemas that are currently empty (owner -> current user -> drop)."""
     appctx: UCAppContext = ctx.obj
     adapter = appctx.adapter
+    _compile_regex_or_exit(name, option_name="--name")
 
     try:
         with out.status("Scanning schemas for empties..."):

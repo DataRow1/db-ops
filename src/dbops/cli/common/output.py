@@ -297,13 +297,40 @@ class Out:
 
         console.print(t)
 
-    def schemas_table(self, schemas: list[str], title: str = "Schemas") -> None:
-        """Render a table of Unity Catalog schema full names (catalog.schema)."""
+    def catalogs_table(self, catalogs: Iterable[Any], title: str = "Catalogs") -> None:
+        """Render a table of Unity Catalog catalogs."""
+        t = Table(title=title, show_lines=False)
+        t.add_column("Catalog", style="ok")
+        t.add_column("Owner", style="meta")
+
+        for c in catalogs:
+            if isinstance(c, str):
+                name = c
+                owner = ""
+            else:
+                name = str(getattr(c, "name", "") or "")
+                owner = str(getattr(c, "owner", "") or "")
+            t.add_row(name, owner)
+
+        console.print(t)
+
+    def schemas_table(self, schemas: Iterable[Any], title: str = "Schemas") -> None:
+        """Render a table of Unity Catalog schemas."""
         t = Table(title=title, show_lines=False)
         t.add_column("Schema", style="ok")
+        t.add_column("Owner", style="meta")
 
         for s in schemas:
-            t.add_row(str(s))
+            if isinstance(s, str):
+                full_name = s
+                owner = ""
+            else:
+                full_name = (
+                    str(getattr(s, "full_name", "") or "")
+                    or str(getattr(s, "name", "") or "")
+                )
+                owner = str(getattr(s, "owner", "") or "")
+            t.add_row(full_name, owner)
 
         console.print(t)
 

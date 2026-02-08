@@ -20,10 +20,13 @@ class UCTableDeleteResult:
 
 def parse_schema_full_name(schema_full_name: str) -> tuple[str, str]:
     """Split `catalog.schema` into (catalog, schema)."""
-    parts = schema_full_name.split(".")
+    parts = schema_full_name.strip().split(".")
     if len(parts) != 2:
         raise ValueError("Schema must be in the form `catalog.schema`.")
-    return parts[0], parts[1]
+    catalog, schema = parts
+    if not catalog or not schema:
+        raise ValueError("Schema must be in the form `catalog.schema`.")
+    return catalog, schema
 
 
 def filter_tables(tables: list[UCTable], name_regex: str | None) -> list[UCTable]:
@@ -45,8 +48,8 @@ def delete_tables(
       1) set owner to current user
       2) delete table
     """
-    owner = adapter.current_username()
     results: list[UCTableDeleteResult] = []
+    owner = adapter.current_username() if not dry_run else None
 
     for full_name in table_full_names:
         if dry_run:
@@ -56,6 +59,8 @@ def delete_tables(
             continue
 
         try:
+            if owner is None:
+                raise RuntimeError("Owner resolution failed for table delete.")
             adapter.set_table_owner(full_name, owner=owner)
             adapter.delete_table(full_name)
             results.append(
@@ -196,7 +201,7 @@ def drop_empty_schemas(
     dry_run: bool,
 ) -> list[UCSchemaDropResult]:
     """Drop schemas that are already empty (owner will be set to current user first)."""
-    me = adapter.current_username()
+    me = adapter.current_username() if not dry_run else None
     results: list[UCSchemaDropResult] = []
 
     for schema_full_name in schema_full_names:
@@ -206,6 +211,8 @@ def drop_empty_schemas(
             )
             continue
         try:
+            if me is None:
+                raise RuntimeError("Owner resolution failed for schema drop.")
             adapter.set_schema_owner(schema_full_name=schema_full_name, owner=me)
             adapter.delete_schema(schema_full_name=schema_full_name, force=force)
             results.append(
