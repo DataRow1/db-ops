@@ -28,7 +28,9 @@ class UCAppContext:
     adapter: UnityCatalogAdapter
 
 
-def build_context(profile: str | None, *, refresh_jobs: bool = False) -> JobsAppContext:
+def build_jobs_context(
+    profile: str | None, *, refresh_jobs: bool = False
+) -> JobsAppContext:
     """Build and return the application context with Databricks client and adapter.
 
     Args:
