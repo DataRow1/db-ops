@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.4.3 (2026-02-08)
+
+### Bug Fixes
+
+- Consistency fixes, add pytest
+  ([`dabc1ab`](https://github.com/DataRow1/brick-ops/commit/dabc1abba08f6a2f258ea08ca91b29041bc25674))
+
+
 ## v0.4.2 (2026-02-08)
 
 ### Bug Fixes
