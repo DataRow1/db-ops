@@ -7,7 +7,7 @@ from dbops.core.jobs import RunStatus
 from dbops.core.jobs import select_jobs as core_select_jobs
 from dbops.core.runs import start_jobs_parallel
 from dbops.cli.common.selector_builder import build_selector
-from dbops.cli.common.context import AppContext, build_context
+from dbops.cli.common.context import JobsAppContext, build_context
 from dbops.cli.common.exits import die, ok_exit, warn_exit
 from dbops.cli.common.options import (
     ConfirmOpt,
@@ -41,7 +41,7 @@ def _init(
     # Build shared context (client + adapter) once per invocation
     ctx.obj = build_context(profile, refresh_jobs=refresh)
     if refresh and ctx.invoked_subcommand is None:
-        appctx: AppContext = ctx.obj
+        appctx: JobsAppContext = ctx.obj
         appctx.adapter.find_all_jobs()
         ok_exit("Jobs cache refreshed")
     if ctx.invoked_subcommand is None:
@@ -59,7 +59,7 @@ def find(
     """
     Find jobs using selectors.
     """
-    appctx: AppContext = ctx.obj
+    appctx: JobsAppContext = ctx.obj
 
     try:
         selector = build_selector(name=name, tags=tag, use_or=use_or)
@@ -88,7 +88,7 @@ def run(
     """
     Run jobs using selectors.
     """
-    appctx: AppContext = ctx.obj
+    appctx: JobsAppContext = ctx.obj
 
     try:
         selector = build_selector(name=name, tags=tag, use_or=use_or)

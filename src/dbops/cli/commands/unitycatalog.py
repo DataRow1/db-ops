@@ -5,8 +5,6 @@ import re
 import typer
 from databricks.sdk.errors import NotFound, PermissionDenied
 
-from dbops.core.adapters.unitycatalog import UnityCatalogAdapter
-from dbops.core.auth import get_client
 from dbops.core.catalog import (
     delete_schema_with_tables,
     delete_tables,
@@ -15,15 +13,30 @@ from dbops.core.catalog import (
     parse_schema_full_name,
     set_tables_owner,
 )
+from dbops.cli.common.context import UCAppContext, build_uc_context
 from dbops.cli.common.exits import exit_from_exc
 from dbops.cli.common.options import ProfileOpt
 from dbops.cli.common.output import out
 
-uc_app = typer.Typer(help="Unity Catalog operations.", no_args_is_help=True)
+uc_app = typer.Typer(
+    help="Unity Catalog operations.",
+    no_args_is_help=False,
+    invoke_without_command=True,
+)
+
+
+@uc_app.callback()
+def _init(ctx: typer.Context, profile: str | None = ProfileOpt):
+    """Initialize Unity Catalog context."""
+    ctx.obj = build_uc_context(profile)
+    if ctx.invoked_subcommand is None:
+        typer.echo(ctx.get_help())
+        raise typer.Exit(0)
 
 
 @uc_app.command("tables-list")
 def tables_list(
+    ctx: typer.Context,
     schema_arg: str | None = typer.Argument(
         None, help="Schema in the form catalog.schema"
     ),
@@ -39,11 +52,10 @@ def tables_list(
         "--type",
         help="Filter by table type (e.g. MANAGED, EXTERNAL, VIEW). Case-insensitive.",
     ),
-    profile: str | None = ProfileOpt,
 ):
     """List Unity Catalog tables in a schema."""
-    client = get_client(profile)
-    adapter = UnityCatalogAdapter(client)
+    appctx: UCAppContext = ctx.obj
+    adapter = appctx.adapter
 
     schema_full_name = schema or schema_arg
     if not schema_full_name:
@@ -87,6 +99,7 @@ def tables_list(
 
 @uc_app.command("tables-owner-set")
 def tables_owner_set(
+    ctx: typer.Context,
     schema_arg: str | None = typer.Argument(
         None, help="Schema in the form catalog.schema"
     ),
@@ -106,11 +119,10 @@ def tables_owner_set(
         False, "--dry-run", help="Show what would change, but do nothing"
     ),
     yes: bool = typer.Option(False, "--yes", help="Skip confirmation prompt"),
-    profile: str | None = ProfileOpt,
 ):
     """Set the owner for one or more Unity Catalog tables."""
-    client = get_client(profile)
-    adapter = UnityCatalogAdapter(client)
+    appctx: UCAppContext = ctx.obj
+    adapter = appctx.adapter
 
     schema_full_name = schema or schema_arg
     if not schema_full_name:
@@ -180,6 +192,7 @@ def tables_owner_set(
 
 @uc_app.command("tables-delete")
 def tables_delete(
+    ctx: typer.Context,
     schema_arg: str | None = typer.Argument(
         None, help="Schema in the form catalog.schema"
     ),
@@ -196,11 +209,10 @@ def tables_delete(
         False, "--dry-run", help="Show what would be deleted, but do nothing"
     ),
     yes: bool = typer.Option(False, "--yes", help="Skip confirmation prompt"),
-    profile: str | None = ProfileOpt,
 ):
     """Delete one or more Unity Catalog tables (owner -> delete)."""
-    client = get_client(profile)
-    adapter = UnityCatalogAdapter(client)
+    appctx: UCAppContext = ctx.obj
+    adapter = appctx.adapter
 
     schema_full_name = schema or schema_arg
     if not schema_full_name:
@@ -270,6 +282,7 @@ def tables_delete(
 
 @uc_app.command("schema-delete")
 def schema_delete(
+    ctx: typer.Context,
     schema: str = typer.Argument(..., help="Schema in the form catalog.schema"),
     name: str | None = typer.Option(
         None, "--name", help="Optional regex to select a subset of tables"
@@ -281,11 +294,10 @@ def schema_delete(
         False, "--dry-run", help="Show what would be deleted, but do nothing"
     ),
     yes: bool = typer.Option(False, "--yes", help="Skip confirmation prompt"),
-    profile: str | None = ProfileOpt,
 ):
     """Delete schema after taking ownership and deleting tables within it."""
-    client = get_client(profile)
-    adapter = UnityCatalogAdapter(client)
+    appctx: UCAppContext = ctx.obj
+    adapter = appctx.adapter
 
     if "." not in schema:
         out.error("Schema must be in the form catalog.schema")
@@ -338,6 +350,7 @@ def schema_delete(
 
 @uc_app.command("schemas-drop-empty")
 def schemas_drop_empty(
+    ctx: typer.Context,
     catalog: str = typer.Option(..., "--catalog", help="Catalog name"),
     name: str | None = typer.Option(
         None, "--name", help="Optional regex filter on schema full name"
@@ -350,11 +363,10 @@ def schemas_drop_empty(
         False, "--dry-run", help="Show what would be deleted, but do nothing"
     ),
     yes: bool = typer.Option(False, "--yes", help="Skip confirmation prompt"),
-    profile: str | None = ProfileOpt,
 ):
     """Drop schemas that are currently empty (owner -> current user -> drop)."""
-    client = get_client(profile)
-    adapter = UnityCatalogAdapter(client)
+    appctx: UCAppContext = ctx.obj
+    adapter = appctx.adapter
 
     try:
         empty = find_empty_schemas(adapter, catalog=catalog, name_regex=name)

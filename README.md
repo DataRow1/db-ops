@@ -75,6 +75,7 @@ Using a specific profile:
 
 ```bash
 dbops jobs --profile prod find --name "example_job"
+dbops uc --profile prod tables-list --schema main.sales
 ```
 
 ---
