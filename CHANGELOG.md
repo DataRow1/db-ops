@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.5.1 (2026-02-10)
+
+### Bug Fixes
+
+- Add sorting to result sets and tables
+  ([`a79ea78`](https://github.com/DataRow1/brick-ops/commit/a79ea78e9b93bdc40177e64d54e37a0a38a129b6))
+
+
 ## v0.5.0 (2026-02-10)
 
 

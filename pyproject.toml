@@ -1,6 +1,6 @@
 [project]
 name = "db-ops"
-version = "0.5.0"
+version = "0.5.1"
 description = "Databricks operations commandline tool"
 readme = "README.md"
 license = { file = "LICENSE" }
