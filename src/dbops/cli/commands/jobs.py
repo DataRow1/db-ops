@@ -110,6 +110,7 @@ def run(
 
     out.header("Selected jobs")
     out.jobs_table(selected, title="Selected")
+    job_name_by_id = {job.id: job.name for job in selected}
 
     # ✅ Dry-run output (standardized)
     if dry_run:
@@ -122,12 +123,21 @@ def run(
         runs = start_jobs_parallel(appctx.adapter, [j.id for j in selected], parallel)
 
     out.success(f"Jobs started: {len(runs)} run(s)")
-    out.runs_table(runs, title="Started runs")
+    out.runs_table(runs, title="Started runs", job_name_by_id=job_name_by_id)
 
     if watch:
-        results = wait_for_runs_with_progress(appctx.adapter, runs, poll_interval=5)
+        results = wait_for_runs_with_progress(
+            appctx.adapter,
+            runs,
+            poll_interval=5,
+            job_name_by_id=job_name_by_id,
+        )
 
-        out.run_status_table(results, title="Run status")
+        out.run_status_table(
+            results,
+            title="Run status",
+            job_name_by_id=job_name_by_id,
+        )
 
         failed = any(status != RunStatus.SUCCESS for _, status in results)
         if failed:
