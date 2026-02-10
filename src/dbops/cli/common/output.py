@@ -172,38 +172,58 @@ class Out:
 
         console.print(t)
 
-    def runs_table(self, runs: Iterable[Any], title: str = "Runs") -> None:
+    def runs_table(
+        self,
+        runs: Iterable[Any],
+        title: str = "Runs",
+        job_name_by_id: Mapping[int, str] | None = None,
+    ) -> None:
         """
-        Expects objects with .job_id and .run_id
+        Expects objects with .job_id and .run_id.
+        If `job_name_by_id` is provided, job names are rendered instead of IDs.
         (e.g. dbops.core.models.JobRun)
         """
         t = Table(title=title, show_lines=False)
-        t.add_column("Job ID", style="ok", no_wrap=True)
+        t.add_column("Job", style="ok", no_wrap=True)
         t.add_column("Run ID", style="ok", no_wrap=True)
 
         for r in runs:
-            t.add_row(str(r.job_id), str(r.run_id))
+            job_id = getattr(r, "job_id", None)
+            if job_name_by_id and isinstance(job_id, int):
+                job_label = job_name_by_id.get(job_id, str(job_id))
+            else:
+                job_label = str(job_id)
+            t.add_row(job_label, str(r.run_id))
 
         console.print(t)
 
     def run_status_table(
-        self, results: Iterable[tuple[Any, Any]], title: str = "Run status"
+        self,
+        results: Iterable[tuple[Any, Any]],
+        title: str = "Run status",
+        job_name_by_id: Mapping[int, str] | None = None,
     ) -> None:
         """
-        Expects tuples of (JobRun, RunStatus)
+        Expects tuples of (JobRun, RunStatus).
+        If `job_name_by_id` is provided, job names are rendered instead of IDs.
         """
         t = Table(title=title, show_lines=False)
-        t.add_column("Job ID", style="ok", no_wrap=True)
+        t.add_column("Job", style="ok", no_wrap=True)
         t.add_column("Run ID", style="ok", no_wrap=True)
         t.add_column("Status")
 
         for run, status in results:
             status_value = status.value if hasattr(status, "value") else str(status)
+            job_id = getattr(run, "job_id", None)
+            if job_name_by_id and isinstance(job_id, int):
+                job_label = job_name_by_id.get(job_id, str(job_id))
+            else:
+                job_label = str(job_id)
 
             style = "ok" if status_value == "SUCCESS" else "err"
 
             t.add_row(
-                str(run.job_id),
+                job_label,
                 str(run.run_id),
                 f"[{style}]{status_value}[/{style}]",
             )
@@ -325,9 +345,8 @@ class Out:
                 full_name = s
                 owner = ""
             else:
-                full_name = (
-                    str(getattr(s, "full_name", "") or "")
-                    or str(getattr(s, "name", "") or "")
+                full_name = str(getattr(s, "full_name", "") or "") or str(
+                    getattr(s, "name", "") or ""
                 )
                 owner = str(getattr(s, "owner", "") or "")
             t.add_row(full_name, owner)
